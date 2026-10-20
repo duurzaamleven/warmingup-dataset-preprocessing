@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-16"?>
+<Task version="1.2" xmlns="http://schemas.microsoft.com/windows/2004/02/mit/task">
+  <RegistrationInfo>
+    <Description>De volledige preprocessing van de WarmingUP-dataset How Low Can You Go, onbeheerd en hervatbaar. Zie ontwerp-preprocessing.md. Registreren met: schtasks /create /tn "WarmingUP-preprocessing-volledig" /xml taak-volledig.xml /f</Description>
+    <URI>\WarmingUP-preprocessing-volledig</URI>
+  </RegistrationInfo>
+  <Principals>
+    <Principal id="Author">
+      <LogonType>InteractiveToken</LogonType>
+      <RunLevel>LeastPrivilege</RunLevel>
+    </Principal>
+  </Principals>
+  <Settings>
+    <!-- Prioriteit 4 is normaal. Zonder dit element draait een taak op 7, onder normaal: op een
+         bezette machine kruipt de run dan (zelfde observatie als bij de DPH-preprocessing). -->
+    <Priority>4</Priority>
+    <!-- De run bewaakt zijn eigen voortgang en is hervatbaar; een batterijwissel hoort de run dus
+         niet te blokkeren of af te kappen. -->
+    <DisallowStartIfOnBatteries>false</DisallowStartIfOnBatteries>
+    <StopIfGoingOnBatteries>false</StopIfGoingOnBatteries>
+    <MultipleInstancesPolicy>IgnoreNew</MultipleInstancesPolicy>
+    <ExecutionTimeLimit>PT12H</ExecutionTimeLimit>
+    <IdleSettings>
+      <StopOnIdleEnd>false</StopOnIdleEnd>
+      <RestartOnIdle>false</RestartOnIdle>
+    </IdleSettings>
+  </Settings>
+  <Triggers>
+    <TimeTrigger>
+      <StartBoundary>2026-09-24T23:59:00</StartBoundary>
+      <Enabled>false</Enabled>
+    </TimeTrigger>
+  </Triggers>
+  <Actions Context="Author">
+    <Exec>
+      <!-- Vervang REPO_PAD door de map van je checkout voordat je deze taak importeert. -->
+      <Command>REPO_PAD\draai_volledig.cmd</Command>
+    </Exec>
+  </Actions>
+</Task>

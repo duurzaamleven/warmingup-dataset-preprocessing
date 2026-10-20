@@ -1,0 +1,39 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "warmingup-preprocessing"
+version = "0.1.0"
+description = "Preprocessing van de WarmingUP-dataset How Low Can You Go naar getypeerde, herleidbare Parquet-tabellen per woning."
+readme = "README.md"
+requires-python = ">=3.11"
+license = { file = "LICENSE" }
+classifiers = [
+    "License :: OSI Approved :: European Union Public Licence 1.2 (EUPL 1.2)",
+]
+dependencies = [
+    "pandas>=2.2,<4",
+    "numpy>=1.26,<3",
+    "pyarrow>=17,<26",
+    # thermostat-temp.csv staat in de zip met Deflate64, wat zipfile niet kan uitpakken.
+    "inflate64>=1.0,<2",
+    # De resultatentabel is een .xlsx (resultaat-tabel-WarmingUP_KITE openbare versie.xlsx).
+    "openpyxl>=3.1,<4",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8,<10",
+    # Valideert datapackage.json (Frictionless Data Package v1) structureel; zie datapackage.py en
+    # tests/test_datapackage.py. Optioneel in de zin dat de generatie zelf frictionless niet nodig
+    # heeft (datapackage.py bouwt het bestand zelf, zonder deze afhankelijkheid); alleen de validatie
+    # ertegen gebruikt het.
+    "frictionless>=5,<6",
+]
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/warmingup_preprocessing"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

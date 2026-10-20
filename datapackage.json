@@ -1,0 +1,558 @@
+{
+  "name": "warmingup-how-low-can-you-go-processed",
+  "title": "WarmingUP How Low Can You Go: voorbewerkte meetdata (getypeerde Parquet-tabellen)",
+  "description": "Voorbewerkte meetdata van het WarmingUP-project Acceptabele Verlaagde Aanvoertemperatuur (How Low Can You Go), uitgevoerd door Deltares. Deze repo is niet de data-eigenaar; zie GEBRUIKSVOORWAARDEN.md voor licentie, meldplicht en herkomst van het archief, en docs/datacatalogus.md voor de volledige beschrijving van elke tabel. Gegenereerd door warmingup_preprocessing.datapackage, niet met de hand bijgehouden.",
+  "version": "2026-09-23-derde-opzet",
+  "licenses": [
+    {
+      "name": "andere",
+      "title": "Geen open licentie: Deltares noemt geen licentienaam (geen CC BY, CC0, ODbL). Gebruik is toegestaan onder de KITE-voorwaarde (meld gebruik op kite@rvo.nl en deel analyseresultaten met de KITE-community); herverspreiding van de ruwe dataset is niet toegestaan. Zie GEBRUIKSVOORWAARDEN.md in deze repo.",
+      "path": "GEBRUIKSVOORWAARDEN.md"
+    }
+  ],
+  "sources": [
+    {
+      "title": "How Low Can You Go, KITE-projectpagina (Kennis- en Dataplatform Individuele Technieken)",
+      "path": "https://kennisdelen.rvo.nl/"
+    },
+    {
+      "title": "data-en-resultaten.zip (ruwe brondata, Deltares)",
+      "path": "https://data.inversable.cloud/how-low-can-you-go/data-en-resultaten.zip",
+      "sha256": "ecc288dda7b49cba1896f127f8269b6fb80e848bc96d26aa1c2a8598dafa87e0",
+      "bytes": 1798671500
+    }
+  ],
+  "contributors": [
+    {
+      "title": "Deltares",
+      "role": "author",
+      "organization": "Deltares"
+    },
+    {
+      "title": "Kenniscentrum Duurzaam Leven",
+      "role": "processor"
+    }
+  ],
+  "resources": [
+    {
+      "name": "boiler_temp",
+      "title": "Minuutdata aanvoer-/retourtemperatuur en debiet, per woning",
+      "format": "parquet",
+      "path": "boiler_temp/home_id=*.parquet",
+      "schema": {
+        "fields": [
+          {
+            "name": "home_id__str",
+            "type": "string",
+            "description": "Pseudoniem van de woning (WU0..WU242), stabiel over alle tabellen.",
+            "constraints": {
+              "required": true
+            }
+          },
+          {
+            "name": "tijdstip",
+            "type": "datetime",
+            "description": "Tijdstip van de meting, tz-aware Europe/Amsterdam (intern eerst als UTC geparsed uit de bron, verliesvrij omgezet naar deze weergavezone; het instant verandert niet), minuutresolutie.",
+            "format": "default",
+            "constraints": {
+              "required": true
+            }
+          },
+          {
+            "name": "temp_aanvoer__degC",
+            "type": "number",
+            "description": "Aanvoertemperatuur naar de radiatoren (bron: Boiler Water Supply Temperature (degC)). De tekstsentinel \"x\" in de bron wordt hier ontbrekend (NaN)."
+          },
+          {
+            "name": "temp_retour__degC",
+            "type": "number",
+            "description": "Retourtemperatuur van de radiatoren (bron: Boiler Water Return Temperature (degC))."
+          },
+          {
+            "name": "debiet_ruw__l_h",
+            "type": "number",
+            "description": "Rauw debiet, ongewijzigd inclusief sentinel (bron: Flow (l/h)). De sentinel 4294967295 (2^32-1, \"onbekend\") blijft hier zichtbaar als getal."
+          },
+          {
+            "name": "debiet__dm3_s_1",
+            "type": "number",
+            "description": "Debiet omgerekend (debiet_ruw__l_h / 3600). De sentinel wordt hier wel ontbrekend (NaN): uitzondering op \"vlaggen, niet verwijderen\"."
+          },
+          {
+            "name": "q_afgifte__W",
+            "type": "number",
+            "description": "Afgeleid afgiftevermogen: (debiet__dm3_s_1 / 1000) * 998,2 * 4186 * (temp_aanvoer__degC - temp_retour__degC). Ontbrekend zodra een van de zes kwaliteitsvlaggen van deze tabel True is."
+          },
+          {
+            "name": "q_flag_debiet_sentinel__bool",
+            "type": "boolean",
+            "description": "True wanneer debiet_ruw__l_h gelijk is aan 4294967295 (2^32-1)."
+          },
+          {
+            "name": "q_flag_debiet_bovengrens__bool",
+            "type": "boolean",
+            "description": "True wanneer debiet_ruw__l_h boven 5.000 l/h ligt en niet de sentinel is (orde-van-grootte-keuze, geen meting; zie sentinels.FLOW_BOVENGRENS__l_h)."
+          },
+          {
+            "name": "q_flag_temp_aanvoer_ontbrekend__bool",
+            "type": "boolean",
+            "description": "True wanneer temp_aanvoer__degC ontbreekt (NaN, inclusief de tekstsentinel \"x\" in de bron)."
+          },
+          {
+            "name": "q_flag_temp_retour_ontbrekend__bool",
+            "type": "boolean",
+            "description": "True wanneer temp_retour__degC ontbreekt (NaN)."
+          },
+          {
+            "name": "q_flag_temp_aanvoer_bereik__bool",
+            "type": "boolean",
+            "description": "True wanneer temp_aanvoer__degC een getal is buiten [0, 100] graden C."
+          },
+          {
+            "name": "q_flag_temp_retour_bereik__bool",
+            "type": "boolean",
+            "description": "True wanneer temp_retour__degC een getal is buiten [0, 100] graden C."
+          },
+          {
+            "name": "q_flag_tijdstip_dubbel__bool",
+            "type": "boolean",
+            "description": "True vanaf de tweede keer dat (home_id, tijdstip) voorkomt; de eerste keer blijft False. Rijen worden gevlagd, niet verwijderd of ontdubbeld."
+          }
+        ],
+        "missingValues": [
+          ""
+        ]
+      },
+      "primaryKeyOmittedReason": "(home_id__str, tijdstip) is NIET uniek: dubbele tijdstempels komen voor en worden gevlagd (q_flag_tijdstip_dubbel__bool), niet ontdubbeld. Zie docs/datacatalogus.md paragraaf 6."
+    },
+    {
+      "name": "thermostat_temp",
+      "title": "Gebeurtenisgestuurde setpoint- en binnentemperatuur, per woning",
+      "format": "parquet",
+      "path": "thermostat_temp/home_id=*.parquet",
+      "schema": {
+        "fields": [
+          {
+            "name": "home_id__str",
+            "type": "string",
+            "description": "Pseudoniem van de woning.",
+            "constraints": {
+              "required": true
+            }
+          },
+          {
+            "name": "tijdstip",
+            "type": "datetime",
+            "description": "Tijdstip van de gebeurtenis, tz-aware Europe/Amsterdam (zie boiler_temp.tijdstip). Niet equidistant: een ontbrekende minuut betekent \"niets veranderd\", niet \"geen meting\".",
+            "format": "default",
+            "constraints": {
+              "required": true
+            }
+          },
+          {
+            "name": "temp_setpoint__degC",
+            "type": "number",
+            "description": "Gewenste (ingestelde) temperatuur (bron: Thermostat Desired Temperature (degC))."
+          },
+          {
+            "name": "temp_binnen__degC",
+            "type": "number",
+            "description": "Gemeten binnentemperatuur (bron: Thermostat Measured Temperature (degC))."
+          },
+          {
+            "name": "q_flag_temp_setpoint_bereik__bool",
+            "type": "boolean",
+            "description": "True wanneer temp_setpoint__degC een getal is buiten [5, 35] graden C."
+          },
+          {
+            "name": "q_flag_temp_binnen_bereik__bool",
+            "type": "boolean",
+            "description": "True wanneer temp_binnen__degC een getal is buiten [0, 40] graden C."
+          },
+          {
+            "name": "q_flag_tijdstip_dubbel__bool",
+            "type": "boolean",
+            "description": "True vanaf de tweede keer dat (home_id, tijdstip) voorkomt; de eerste keer blijft False. Rijen worden gevlagd, niet verwijderd of ontdubbeld."
+          }
+        ],
+        "missingValues": [
+          ""
+        ]
+      },
+      "primaryKeyOmittedReason": "(home_id__str, tijdstip) is NIET uniek, zelfde reden als boiler_temp."
+    },
+    {
+      "name": "etmaal",
+      "title": "Etmaalstatistiek (gas, branderuren, waterdruk)",
+      "format": "parquet",
+      "path": "etmaal.parquet",
+      "schema": {
+        "fields": [
+          {
+            "name": "home_id__str",
+            "type": "string",
+            "description": "Pseudoniem van de woning.",
+            "constraints": {
+              "required": true
+            }
+          },
+          {
+            "name": "datum__str",
+            "type": "string",
+            "description": "Lokale kalenderdag, Europe/Amsterdam, ISO-8601-tekst. Bewust GEEN timestamp: niet naar UTC omgerekend (dat zou de dag zelf laten verschuiven).",
+            "constraints": {
+              "required": true
+            }
+          },
+          {
+            "name": "g_tapwater__m3",
+            "type": "number",
+            "description": "Gasverbruik tapwater (bron: Gas Usage Domestic Hot Water (DHW) (m3))."
+          },
+          {
+            "name": "g_ruimteverwarming__m3",
+            "type": "number",
+            "description": "Gasverbruik ruimteverwarming (bron: Gas Usage Central Heating (CH) (m3))."
+          },
+          {
+            "name": "t_brander_tapwater__h",
+            "type": "number",
+            "description": "Brandertijd tapwater (bron: Heater Active Duration DWH (hours); tikfout in de bron zelf, DWH i.p.v. DHW)."
+          },
+          {
+            "name": "t_brander_verwarming__h",
+            "type": "number",
+            "description": "Brandertijd ruimteverwarming (bron: Heater Active Duration CH (hours))."
+          },
+          {
+            "name": "p_cv_min__Pa",
+            "type": "number",
+            "description": "Minimale cv-waterdruk over het etmaal, omgerekend naar Pa (bron in bar; sentinel -1 eerst naar NaN, dan pas * 1e5)."
+          },
+          {
+            "name": "p_cv_gem__Pa",
+            "type": "number",
+            "description": "Gemiddelde cv-waterdruk over het etmaal, omgerekend naar Pa."
+          },
+          {
+            "name": "p_cv_max__Pa",
+            "type": "number",
+            "description": "Maximale cv-waterdruk over het etmaal, omgerekend naar Pa."
+          },
+          {
+            "name": "q_flag_gas_ruimteverwarming_bereik__bool",
+            "type": "boolean",
+            "description": "True wanneer g_ruimteverwarming__m3 een getal is buiten [0, 50] m3."
+          },
+          {
+            "name": "q_flag_gas_tapwater_bereik__bool",
+            "type": "boolean",
+            "description": "True wanneer g_tapwater__m3 een getal is buiten [0, 10] m3."
+          },
+          {
+            "name": "q_flag_brander_verwarming_bereik__bool",
+            "type": "boolean",
+            "description": "True wanneer t_brander_verwarming__h een getal is buiten [0, 24] uur."
+          },
+          {
+            "name": "q_flag_brander_tapwater_bereik__bool",
+            "type": "boolean",
+            "description": "True wanneer t_brander_tapwater__h een getal is buiten [0, 24] uur."
+          },
+          {
+            "name": "q_flag_druk_min_onbekend__bool",
+            "type": "boolean",
+            "description": "True wanneer de bronwaarde van p_cv_min gelijk was aan -1 bar (\"unknown\")."
+          },
+          {
+            "name": "q_flag_druk_gem_onbekend__bool",
+            "type": "boolean",
+            "description": "True wanneer de bronwaarde van p_cv_gem gelijk was aan -1 bar."
+          },
+          {
+            "name": "q_flag_druk_max_onbekend__bool",
+            "type": "boolean",
+            "description": "True wanneer de bronwaarde van p_cv_max gelijk was aan -1 bar."
+          }
+        ],
+        "missingValues": [
+          ""
+        ]
+      },
+      "primaryKeyOmittedReason": "(home_id__str, datum__str) is NIET uniek: 5.856 van de 199.776 rijen in de echte volledige-run-uitvoer (23-09-2026) hebben een dubbele combinatie. Niet eerder gedocumenteerd; bevinding bij het schrijven van deze module, zie VOORTGANG.md."
+    },
+    {
+      "name": "mapping",
+      "title": "Sleuteltabel: logger/serienummer/ketel-id per woning",
+      "format": "parquet",
+      "path": "mapping.parquet",
+      "schema": {
+        "fields": [
+          {
+            "name": "home_id__str",
+            "type": "string",
+            "description": "Pseudoniem van de woning (bron: house).",
+            "constraints": {
+              "required": true
+            }
+          },
+          {
+            "name": "logger_id__str",
+            "type": "string",
+            "description": "Logger-identificatie (bron: logger_id).",
+            "constraints": {
+              "required": true
+            }
+          },
+          {
+            "name": "serial_no__str",
+            "type": "string",
+            "description": "Serienummer van de logger (bron: serial_no)."
+          },
+          {
+            "name": "heater_id__str",
+            "type": "string",
+            "description": "Ketel-identificatie (bron: heater_id)."
+          }
+        ],
+        "missingValues": [
+          ""
+        ],
+        "primaryKey": [
+          "home_id__str"
+        ]
+      }
+    },
+    {
+      "name": "resultaten",
+      "title": "2R2C-modelparameters, ontwerp- en geinstalleerd vermogen, woningkenmerken",
+      "format": "parquet",
+      "path": "resultaten.parquet",
+      "schema": {
+        "fields": [
+          {
+            "name": "resultaat_volgnummer__int",
+            "type": "integer",
+            "description": "Oorspronkelijke rijvolgorde in de bron-xlsx (bron: Order); geen fysische grootheid, bewaard als herkomst van de volgorde."
+          },
+          {
+            "name": "home_id__str",
+            "type": "string",
+            "description": "Pseudoniem van de woning (bron: woning_id).",
+            "constraints": {
+              "required": true
+            }
+          },
+          {
+            "name": "logger_id__str",
+            "type": "string",
+            "description": "Logger-identificatie (bron: logger_id).",
+            "constraints": {
+              "required": true
+            }
+          },
+          {
+            "name": "serial_no__str",
+            "type": "string",
+            "description": "Serienummer van de logger (bron: serial_no)."
+          },
+          {
+            "name": "model_training_fout__onbekend",
+            "type": "number",
+            "description": "Modelfout, trainingsdeel (bron: model_training_rms). Eenheid bewust \"onbekend\": niet gedocumenteerd door Deltares."
+          },
+          {
+            "name": "model_validatie_fout__onbekend",
+            "type": "number",
+            "description": "Modelfout, validatiedeel (bron: model_validation_rms). Eenheid onbekend."
+          },
+          {
+            "name": "model_training_bias__onbekend",
+            "type": "number",
+            "description": "Modelbias, trainingsdeel (bron: model_training_mean_bias_error). Eenheid onbekend."
+          },
+          {
+            "name": "model_validatie_bias__onbekend",
+            "type": "number",
+            "description": "Modelbias, validatiedeel (bron: model_validation_mean_bias_error). Eenheid onbekend."
+          },
+          {
+            "name": "p_ontwerp__W",
+            "type": "number",
+            "description": "Ontwerp-warmtevraag (bron: steady_state_heat_supply, Q_d [W])."
+          },
+          {
+            "name": "c_binnen__J_K_1",
+            "type": "number",
+            "description": "Thermische massa binnenschil, 2R2C-model (bron: C_i [J/C])."
+          },
+          {
+            "name": "r_binnen_schil__K_W_1",
+            "type": "number",
+            "description": "Warmteweerstand binnen-schil, 2R2C-model (bron: R_ie [C/W])."
+          },
+          {
+            "name": "a_raam_effectief__m2",
+            "type": "number",
+            "description": "Effectief raamoppervlak voor zoninval, 2R2C-model (bron: A_w [m2])."
+          },
+          {
+            "name": "c_schil__J_K_1",
+            "type": "number",
+            "description": "Thermische massa schil, 2R2C-model (bron: C_e [J/C])."
+          },
+          {
+            "name": "r_schil_buiten__K_W_1",
+            "type": "number",
+            "description": "Warmteweerstand schil-buiten, 2R2C-model (bron: R_ea [C/W])."
+          },
+          {
+            "name": "temp_aanvoer_min__degC",
+            "type": "number",
+            "description": "Minimale aanvoertemperatuur uit de modelfit (bron: sv_supply_wa_60T)."
+          },
+          {
+            "name": "temp_retour_min__degC",
+            "type": "number",
+            "description": "Minimale retourtemperatuur uit de modelfit (bron: sv_return_wa_60T)."
+          },
+          {
+            "name": "woningtype__cat",
+            "type": "string",
+            "description": "Woningtype (bron: Woning_type), o.a. hoekwoning, tussenwoning, appartement."
+          },
+          {
+            "name": "bouwjaar_klasse__cat",
+            "type": "string",
+            "description": "Bouwjaarklasse (bron: bouwjaar_bins)."
+          },
+          {
+            "name": "bouwjaar_klasse_eindrapport__cat",
+            "type": "string",
+            "description": "Bouwjaarklasse zoals in het eindrapport (bron: BJ_Cat), grover dan bouwjaar_klasse__cat."
+          },
+          {
+            "name": "oppervlak_klasse__cat",
+            "type": "string",
+            "description": "Gebruiksoppervlakteklasse (bron: Gebruiksoppervlak_bin)."
+          },
+          {
+            "name": "g_jaarverbruik_indicatief__m3",
+            "type": "number",
+            "description": "Indicatief jaarlijks gasverbruik (bron: indicatief_gas [m3])."
+          },
+          {
+            "name": "p_afgifte_geinstalleerd__W",
+            "type": "number",
+            "description": "Geinstalleerd radiatorvermogen (bron: Total installed power, Q_a (kW), omgerekend naar W)."
+          },
+          {
+            "name": "overdimensionering__frac",
+            "type": "number",
+            "description": "Verhouding ontwerp- op geinstalleerd vermogen, Q_d / Q_a (bron: dimless heat power, Q_d/Q_a [-])."
+          }
+        ],
+        "missingValues": [
+          ""
+        ],
+        "primaryKey": [
+          "home_id__str"
+        ]
+      }
+    },
+    {
+      "name": "info_metadata",
+      "title": "Herkomsttekst van het info-blad van de resultatentabel",
+      "format": "parquet",
+      "path": "info_metadata.parquet",
+      "schema": {
+        "fields": [
+          {
+            "name": "regel__int",
+            "type": "integer",
+            "description": "Regelnummer in het oorspronkelijke info-blad van de resultaten-xlsx.",
+            "constraints": {
+              "required": true
+            }
+          },
+          {
+            "name": "tekst__str",
+            "type": "string",
+            "description": "Tekst van de regel, celwaarden samengevoegd met \" | \"; geen vertaling, geen interpretatie."
+          }
+        ],
+        "missingValues": [
+          ""
+        ],
+        "primaryKey": [
+          "regel__int"
+        ]
+      }
+    },
+    {
+      "name": "dekking",
+      "title": "Dekkingsstatistiek per woning per bron",
+      "format": "parquet",
+      "path": "dekking.parquet",
+      "schema": {
+        "fields": [
+          {
+            "name": "home_id__str",
+            "type": "string",
+            "description": "Pseudoniem van de woning.",
+            "constraints": {
+              "required": true
+            }
+          },
+          {
+            "name": "bron__cat",
+            "type": "string",
+            "description": "\"boiler_temp\" of \"thermostat_temp\".",
+            "constraints": {
+              "required": true
+            }
+          },
+          {
+            "name": "rijen__int",
+            "type": "integer",
+            "description": "Aantal rijen van deze woning in deze bron."
+          },
+          {
+            "name": "eerste_tijdstip",
+            "type": "datetime",
+            "description": "Eerste tijdstip in het venster van deze woning.",
+            "format": "default"
+          },
+          {
+            "name": "laatste_tijdstip",
+            "type": "datetime",
+            "description": "Laatste tijdstip in het venster van deze woning.",
+            "format": "default"
+          },
+          {
+            "name": "dubbele_tijdstippen__int",
+            "type": "integer",
+            "description": "Aantal dubbele tijdstempels binnen deze woning/bron; telt alleen, verwijdert niets."
+          },
+          {
+            "name": "dekking_fractie__frac",
+            "type": "number",
+            "description": "Alleen voor boiler_temp: rijen / minuten-in-venster. NaN voor thermostat_temp."
+          },
+          {
+            "name": "gemiddeld_interval__s",
+            "type": "number",
+            "description": "Alleen voor thermostat_temp: gemiddeld interval tussen opeenvolgende metingen. NaN voor boiler_temp."
+          }
+        ],
+        "missingValues": [
+          ""
+        ],
+        "primaryKey": [
+          "home_id__str",
+          "bron__cat"
+        ]
+      }
+    }
+  ]
+}
