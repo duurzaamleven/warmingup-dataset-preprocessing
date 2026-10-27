@@ -15,10 +15,3 @@ __pycache__/
 
 # Claude Code
 .claude/
-
-# Herleidbaarheidsanalyse: blijft buiten git tot de bronhouders op het rapport hebben kunnen
-# reageren (responsible disclosure). Daarna komt het rapport er als gewone commit bij.
-docs/herleidbaarheid.md
-docs/herleidbaarheid/
-analyse/herleidbaarheid/
-*NIET_PUBLICEREN*
