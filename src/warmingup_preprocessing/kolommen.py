@@ -19,8 +19,6 @@ Conventie: eenheid na de dubbele underscore, ``_cum`` alleen voor een meterstand
 
 from __future__ import annotations
 
-import pandas as pd
-
 #: ``boiler-temp.csv``: de kerntabel, één rij per woning per minuut.
 BOILER_TEMP_KOLOMMEN = {
     "House": "home_id__str",
@@ -55,15 +53,8 @@ BOILER_24H_STATS_KOLOMMEN = {
     "Water Pressure CH Max (Bar -1=unknown)": "p_cv_max__bar",
 }
 
-#: ``mapping.csv``: sleuteltabel, blijft apart van de meettabellen (ontwerp §5).
-MAPPING_KOLOMMEN = {
-    "house": "home_id__str",
-    "logger_id": "logger_id__str",
-    "serial_no": "serial_no__str",
-    "heater_id": "heater_id__str",
-}
-
-#: De resultatentabel (blad ``Sheet1`` van de xlsx), header op rij 5 (0-geïndexeerd), 24 kolommen.
+#: De resultatentabel (blad ``Sheet1`` van de xlsx), header op rij 5 (0-geïndexeerd), 22 kolommen in
+#: de versie van 27-10-2026 van de bron (zonder ``logger_id`` en ``serial_no``).
 #: ``blank col1`` is in de bron een volledig lege kolom (geverifieerd: alle 212 rijen NaN) en wordt
 #: hier bewust weggelaten in plaats van vertaald.
 #:
@@ -75,8 +66,6 @@ MAPPING_KOLOMMEN = {
 RESULTATEN_KOLOMMEN = {
     "Order": "resultaat_volgnummer__int",
     "woning_id": "home_id__str",
-    "logger_id": "logger_id__str",
-    "serial_no": "serial_no__str",
     "model_training_rms": "model_training_fout__onbekend",
     "model_validation_rms": "model_validatie_fout__onbekend",
     "model_training_mean_bias_error": "model_training_bias__onbekend",
@@ -117,29 +106,6 @@ def debiet_l_h_naar_dm3_s(debiet__l_h):
     ``sentinels.py``.
     """
     return debiet__l_h / 3600.0
-
-
-def naar_string_zonder_punt0(kolom: pd.Series) -> pd.Series:
-    """Cast een kolom die eigenlijk tekst is (een ``__str``-naam draagt) maar als getal is ingelezen
-    naar tekst, zonder een ``.0``-staart.
-
-    **Waarom dit nodig is.** ``logger_id__str`` komt in ``mapping.csv`` al als tekst binnen
-    (``pandas.read_csv(..., dtype=str)``), maar in de resultaten-xlsx leest ``pandas.read_excel`` hem
-    als getal: ``int64`` zolang er geen lege cel in de kolom staat, anders ``float64`` (pandas kan
-    geen ``NaN`` in een ``int64``-kolom bewaren). Zonder deze functie zou ``resultaten.parquet`` dus
-    een ander Parquet-type hebben dan ``mapping.parquet`` voor dezelfde grootheid, en een kale
-    ``.astype(str)`` op de ``float64``-vorm zou bovendien "20000001.0" geven in plaats van
-    "20000001" (geverifieerd op de echte volledige-run-uitvoer, 23-09-2026, zie
-    docs/datacatalogus.md).
-
-    Ontbrekende waarden blijven ontbrekend (geen "nan"- of "<NA>"-tekst).
-    """
-    if pd.api.types.is_object_dtype(kolom) or pd.api.types.is_string_dtype(kolom):
-        return kolom.astype(str).where(kolom.notna(), other=pd.NA)
-    # Eerst via de nullable Int64-extensie (bewaart NaN als <NA> in plaats van 20000001.0), dan pas
-    # naar tekst; .mask(...) zet de <NA>-posities daarna weer op een echte ontbrekende waarde (de
-    # tussenstap ".astype(str)" zou ze anders als de LETTERLIJKE tekst "<NA>" wegschrijven).
-    return kolom.astype("Int64").astype(str).mask(kolom.isna())
 
 
 def bar_naar_pa(druk__bar):

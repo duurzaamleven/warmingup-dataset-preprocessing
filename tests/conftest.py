@@ -58,7 +58,7 @@ def bouw_test_zip(
     etmaal_dagen_per_woning: int = 5,
     ongesorteerd: bool = False,
 ) -> Path:
-    """Bouw een kleine zip met dezelfde zes leden als het echte archief, gevuld met synthetische
+    """Bouw een kleine zip met dezelfde vijf leden als het echte archief (versie van 27-10-2026), gevuld met synthetische
     data voor ``homes``. Bij ``ongesorteerd=True`` worden de regels van de grote bestanden zo
     verdeeld dat woning A en woning B elkaar afwisselen (bewust GEEN aaneengesloten blokken), zodat
     de ongesorteerde route getest kan worden."""
@@ -94,11 +94,7 @@ def bouw_test_zip(
         etmaal_regels.append(_etmaal_regels(home, etmaal_dagen_per_woning))
     etmaal_inhoud = BOILER_24H_KOP + "\n" + "\n".join(_vlecht(etmaal_regels)) + "\n"
 
-    mapping_inhoud = "house,logger_id,serial_no,heater_id\n" + "\n".join(
-        f"{home},{20000000 + i},1234a{i:05d},{300000 + i}" for i, home in enumerate(homes)
-    ) + "\n"
-
-    readme_inhoud = "Boiler temp: test.\nBoiler 24h: test.\nThermostat Temp: test.\nMapping: test.\n"
+    readme_inhoud = "Boiler temp: test.\nBoiler 24h: test.\nThermostat Temp: test.\n"
 
     # De resultatentabel: 'info'-blad plus 'Sheet1' met de kop op rij 5 (0-geïndexeerd).
     wb = openpyxl.Workbook()
@@ -109,7 +105,7 @@ def bouw_test_zip(
 
     sheet1 = wb.create_sheet("Sheet1")
     kop = [
-        "Order", "woning_id", "logger_id", "serial_no", "model_training_rms", "model_validation_rms",
+        "Order", "woning_id", "model_training_rms", "model_validation_rms",
         "model_training_mean_bias_error", "model_validation_mean_bias_error", "steady_state_heat_supply, Q_d [W]",
         "C_i [J/C]", "R_ie [C/W]", "A_w [m2]", "C_e [J/C]", "R_ea [C/W]", "sv_supply_wa_60T", "sv_return_wa_60T",
         "blank col1", "Woning_type", "bouwjaar_bins", "BJ_Cat", "Gebruiksoppervlak_bin", "indicatief_gas [m3]",
@@ -119,7 +115,7 @@ def bouw_test_zip(
         sheet1.cell(row=6, column=c, value=naam)
     for r, home in enumerate(homes, start=7):
         waarden = [
-            r - 7, home, 20000000 + r, f"serial{r}", 0.2, 0.25, 0.01, 0.02, 5000.0, 1e7, 0.001, 2.0, 5e7, 0.005,
+            r - 7, home, 0.2, 0.25, 0.01, 0.02, 5000.0, 1e7, 0.001, 2.0, 5e7, 0.005,
             55.0, 40.0, None, "tussenwoning", "1974-1982", "1974-1991", "80-89", 1200.0, 10.0, 0.5,
         ]
         for c, waarde in enumerate(waarden, start=1):
@@ -134,7 +130,6 @@ def bouw_test_zip(
         z.writestr("boiler-temp.csv", boiler_inhoud)
         z.writestr("thermostat-temp.csv", thermo_inhoud)
         z.writestr("boiler-24h-stats.csv", etmaal_inhoud)
-        z.writestr("mapping.csv", mapping_inhoud)
         z.writestr("README.md", readme_inhoud)
         z.writestr("resultaat-tabel-WarmingUP_KITE openbare versie.xlsx", xlsx_bytes)
 

@@ -2,7 +2,7 @@
   "name": "warmingup-how-low-can-you-go-processed",
   "title": "WarmingUP How Low Can You Go: voorbewerkte meetdata (getypeerde Parquet-tabellen)",
   "description": "Voorbewerkte meetdata van het WarmingUP-project Acceptabele Verlaagde Aanvoertemperatuur (How Low Can You Go), uitgevoerd door Deltares. Deze repo is niet de data-eigenaar; zie GEBRUIKSVOORWAARDEN.md voor licentie, meldplicht en herkomst van het archief, en docs/datacatalogus.md voor de volledige beschrijving van elke tabel. Gegenereerd door warmingup_preprocessing.datapackage, niet met de hand bijgehouden.",
-  "version": "2026-09-23-derde-opzet",
+  "version": "2026-10-28-vierde-opzet",
   "licenses": [
     {
       "name": "andere",
@@ -16,10 +16,10 @@
       "path": "https://kennisdelen.rvo.nl/"
     },
     {
-      "title": "data-en-resultaten.zip (ruwe brondata, Deltares)",
+      "title": "data-en-resultaten.zip (ruwe brondata, Deltares), versie van 2026-10-27",
       "path": "https://data.inversable.cloud/how-low-can-you-go/data-en-resultaten.zip",
-      "sha256": "ecc288dda7b49cba1896f127f8269b6fb80e848bc96d26aa1c2a8598dafa87e0",
-      "bytes": 1798671500
+      "version": "2026-10-27",
+      "bytes": 1798660453
     }
   ],
   "contributors": [
@@ -282,48 +282,6 @@
       "primaryKeyOmittedReason": "(home_id__str, datum__str) is NIET uniek: 5.856 van de 199.776 rijen in de echte volledige-run-uitvoer (23-09-2026) hebben een dubbele combinatie. Niet eerder gedocumenteerd; bevinding bij het schrijven van deze module, zie VOORTGANG.md."
     },
     {
-      "name": "mapping",
-      "title": "Sleuteltabel: logger/serienummer/ketel-id per woning",
-      "format": "parquet",
-      "path": "mapping.parquet",
-      "schema": {
-        "fields": [
-          {
-            "name": "home_id__str",
-            "type": "string",
-            "description": "Pseudoniem van de woning (bron: house).",
-            "constraints": {
-              "required": true
-            }
-          },
-          {
-            "name": "logger_id__str",
-            "type": "string",
-            "description": "Logger-identificatie (bron: logger_id).",
-            "constraints": {
-              "required": true
-            }
-          },
-          {
-            "name": "serial_no__str",
-            "type": "string",
-            "description": "Serienummer van de logger (bron: serial_no)."
-          },
-          {
-            "name": "heater_id__str",
-            "type": "string",
-            "description": "Ketel-identificatie (bron: heater_id)."
-          }
-        ],
-        "missingValues": [
-          ""
-        ],
-        "primaryKey": [
-          "home_id__str"
-        ]
-      }
-    },
-    {
       "name": "resultaten",
       "title": "2R2C-modelparameters, ontwerp- en geinstalleerd vermogen, woningkenmerken",
       "format": "parquet",
@@ -342,19 +300,6 @@
             "constraints": {
               "required": true
             }
-          },
-          {
-            "name": "logger_id__str",
-            "type": "string",
-            "description": "Logger-identificatie (bron: logger_id).",
-            "constraints": {
-              "required": true
-            }
-          },
-          {
-            "name": "serial_no__str",
-            "type": "string",
-            "description": "Serienummer van de logger (bron: serial_no)."
           },
           {
             "name": "model_training_fout__onbekend",

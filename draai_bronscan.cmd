@@ -14,7 +14,7 @@ if not defined RAW set RAW=data\raw
 if not exist data mkdir data
 echo. >> data\bronscan.log
 echo ==== start %DATE% %TIME% (raw: %RAW%) ==== >> data\bronscan.log
-for %%B in (boiler-temp.csv thermostat-temp.csv boiler-24h-stats.csv mapping.csv "resultaat-tabel-WarmingUP_KITE openbare versie.xlsx") do (
+for %%B in (boiler-temp.csv thermostat-temp.csv boiler-24h-stats.csv "resultaat-tabel-WarmingUP_KITE openbare versie.xlsx") do (
   echo ---- %%~B %TIME% >> data\bronscan.log
   python -u -m warmingup_preprocessing.bronscan --raw-dir "%RAW%" --bestand "%%~B" --uit data\scan -v >> data\bronscan.log 2>&1
   echo ---- einde %%~B exitcode %ERRORLEVEL% %TIME% >> data\bronscan.log

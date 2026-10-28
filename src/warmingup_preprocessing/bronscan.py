@@ -74,7 +74,6 @@ KOLOMSOORTEN: dict[str, tuple[str, ...]] = {
     zipbron.BOILER_TEMP: ("woning", "tijd", "getal", "getal", "getal"),
     zipbron.THERMOSTAT_TEMP: ("woning", "tijd", "getal", "getal"),
     zipbron.BOILER_24H_STATS: ("woning", "dag") + ("getal",) * 7,
-    zipbron.MAPPING: ("woning", "vrij", "vrij", "vrij"),
 }
 
 

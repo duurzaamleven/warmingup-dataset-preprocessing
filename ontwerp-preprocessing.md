@@ -7,16 +7,16 @@ zichzelf.
 
 ## 1. Wat erin gaat
 
-Eén zip-archief, `data/raw/data-en-resultaten.zip` (1,8 GB, buiten git), met zes leden:
+Eén zip-archief, `data/raw/data-en-resultaten.zip` (1,8 GB, buiten git), in de versie van 27-10-2026
+van de bron, zonder `mapping.csv` en zonder logger- en serienummers. Het heeft vijf leden:
 
 | bestand | rijen | korrel | compressie |
 |---|---:|---|---|
 | `boiler-temp.csv` | 243.041.542 | 1 minuut, per woning | Deflate |
 | `thermostat-temp.csv` | 69.166.957 | gebeurtenisgestuurd, per woning | **Deflate64** |
 | `boiler-24h-stats.csv` | 199.776 | etmaal, per woning, lokale tijd | Deflate |
-| `mapping.csv` | 243 | sleuteltabel | Deflate |
 | `resultaat-tabel-…xlsx` (blad `Sheet1`) | 212 | per woning, eenmalig | Deflate |
-| `README.md` | 4 regels | | Deflate |
+| `README.md` | 3 regels | korte uitleg bij de csv's; niet verwerkt | Deflate |
 
 220 tot 223 woningen (het aantal loopt per bestand uiteen, zie §6), elk met een pseudoniem `WU0` t/m
 `WU242`, stabiel over alle bestanden. Alles gaat per woning; er is geen enkele aggregatie over
@@ -38,7 +38,6 @@ bepaalt de schrijfstrategie, zie §4.
 | `boiler_temp/home_id=<id>.parquet` | één bestand per woning, zstd | aanvoer-/retourtemperatuur, debiet, afgeleid vermogen, kwaliteitsvlaggen |
 | `thermostat_temp/home_id=<id>.parquet` | één bestand per woning, zstd | setpoint- en binnentemperatuur, kwaliteitsvlaggen |
 | `etmaal.parquet` | één tabel, alle woningen | gas, branderuren, waterdruk, kwaliteitsvlaggen |
-| `mapping.parquet` | één tabel | de sleuteltabel (logger/serienummer/ketel-id) |
 | `resultaten.parquet` | één tabel | de 2R2C-parameters, ontwerp- en geïnstalleerd vermogen, woningkenmerken |
 | `info_metadata.parquet` | één tabel | de tekst van het `info`-blad van de resultatentabel, als herkomst |
 | `dekking.parquet` | één tabel | dekkingsstatistiek per woning per bron (§6) |
@@ -49,17 +48,15 @@ bepaalt de schrijfstrategie, zie §4.
 
 Plus `docs/data-quality.md`, door de pijplijn zelf geschreven (§7).
 
-**Bestaande uitvoer van een oudere contractversie omzetten zonder herrun**: `python -m
-warmingup_preprocessing.migreer --uit <map>` (`migreer.py`) leest de al geschreven Parquet-bestanden
-terug, past de vormveranderingen sinds die contractversie toe (tz-omzetting, de dedupvlag,
-`logger_id__str` als string), en herbouwt `dekking.parquet`, `docs/data-quality.md` en
-`datapackage.json`. Hervatbaar en idempotent via hetzelfde `Manifest.is_voltooid`-mechanisme als de
-hoofdpijplijn (zie §5); geen apart migratiestatusbestand nodig. Zie de moduledocstring van
-`migreer.py`.
+**Uitvoer van een oudere contractversie** bouw je opnieuw op met een volledige run, bij voorkeur in
+een nieuwe uitvoermap. Contractversie `2026-10-28-vierde-opzet` hoort bij een andere versie van de
+bron; omzetten zonder die bron opnieuw te lezen kan dus niet. Een hervatting in een bestaande map
+herschrijft alles met een oudere contractversie (§5), maar ruimt bestanden die in het huidige
+contract niet meer bestaan niet op.
 
 **Waarom per woning voor de twee grote bestanden, en één tabel voor de rest.** De twee grote
 bestanden zijn samen 12,3 GB ontcomprimeerd; wie maar een paar woningen nodig heeft, moet niet de
-volledige set hoeven inlezen om ze eruit te filteren. De drie kleine bestanden (etmaal, mapping,
+volledige set hoeven inlezen om ze eruit te filteren. De kleine bestanden (etmaal en
 resultaten) zijn samen goed voor een paar tientallen MB en horen als geheel gelezen te worden: een
 opsplitsing per woning zou alleen bestandsoverhead toevoegen.
 
@@ -309,7 +306,7 @@ worden precies `compress_size` bytes in blokken aan `inflate64.Inflater` gevoerd
 het echte archief: de eerste regels decomprimeren correct, de kolomkoppen kloppen, en een streamende
 `pandas.read_csv` erop werkt zoals op een gewoon Deflate-lid.
 
-Dit is de enige plek in de repo die `inflate64` gebruikt; de vijf andere leden gaan gewoon via
+Dit is de enige plek in de repo die `inflate64` gebruikt; de vier andere leden gaan gewoon via
 `zipfile.ZipFile.open`.
 
 ## 9. Het voortgangsbestand
@@ -319,7 +316,7 @@ dan 45 seconden tussen twee schrijfacties zit (ruim onder de eis van "minstens e
 
 ```json
 {
-  "uitvoer_contract_versie": "2026-09-23-derde-opzet",
+  "uitvoer_contract_versie": "2026-10-28-vierde-opzet",
   "fase": "boiler_temp",
   "gestart_op": "2026-09-23T10:00:00+00:00",
   "laatst_bijgewerkt_op": "2026-09-23T10:04:12+00:00",

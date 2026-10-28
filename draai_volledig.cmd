@@ -24,11 +24,15 @@ set ARROW_DEFAULT_MEMORY_POOL=system
 rem Uitvoerpad: lokale configuratie, geen onderdeel van deze repo. Zet UITVOER vooraf op de
 rem omgeving waar dit script draait (bijvoorbeeld een netwerkschijf, als C: krap is en andere
 rem machines de tabellen van daar moeten lezen); zonder die omgevingsvariabele valt dit terug op een
-rem lokale map. De invoer blijft de lokale zip, want lezen is de langzame stap.
+rem lokale map.
 if not defined UITVOER set UITVOER=data\processed
+rem Invoer: de map met data-en-resultaten.zip (of het zip-bestand zelf). Zet RAW vooraf op de
+rem omgeving als de zip elders staat; standaard data\raw. Staan er in die map meer zips, dan moet
+rem er precies een "resultaten" in de naam hebben, anders stopt de run met een foutmelding.
+if not defined RAW set RAW=data\raw
 
 if not exist data mkdir data
 echo. >> data\volledig-run.log
-echo ==== start %DATE% %TIME% (uitvoer: %UITVOER%) ==== >> data\volledig-run.log
-python -u -m warmingup_preprocessing --raw-dir data\raw --uit "%UITVOER%" -v >> data\volledig-run.log 2>&1
+echo ==== start %DATE% %TIME% (raw: %RAW%, uitvoer: %UITVOER%) ==== >> data\volledig-run.log
+python -u -m warmingup_preprocessing --raw-dir "%RAW%" --uit "%UITVOER%" -v >> data\volledig-run.log 2>&1
 echo ==== einde %DATE% %TIME% (exitcode %ERRORLEVEL%) ==== >> data\volledig-run.log

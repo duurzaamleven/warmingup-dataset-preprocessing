@@ -16,7 +16,6 @@ _SCHEMAS = {
     "boiler_temp": BOILER_TEMP_SCHEMA,
     "thermostat_temp": THERMOSTAT_TEMP_SCHEMA,
     "etmaal": tabellen.ETMAAL_SCHEMA,
-    "mapping": tabellen.MAPPING_SCHEMA,
     "resultaten": tabellen.RESULTATEN_SCHEMA,
     "info_metadata": tabellen.INFO_METADATA_SCHEMA,
     "dekking": dekking.DEKKING_SCHEMA,
@@ -62,10 +61,10 @@ def test_geen_primary_key_op_boiler_temp_thermostat_temp_en_etmaal():
         assert resources[naam]["primaryKeyOmittedReason"]
 
 
-def test_primary_key_op_de_vier_unieke_tabellen():
+def test_primary_key_op_de_drie_unieke_tabellen():
     pakket = datapackage.bouw_datapackage()
     resources = {r["name"]: r for r in pakket["resources"]}
-    for naam in ("mapping", "resultaten", "info_metadata", "dekking"):
+    for naam in ("resultaten", "info_metadata", "dekking"):
         assert resources[naam]["schema"]["primaryKey"]
 
 

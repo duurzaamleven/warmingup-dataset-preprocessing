@@ -16,7 +16,10 @@ underscore, `_cum` alleen voor een meterstand op een moment (komt in deze datase
 Types, rijaantallen en schema's in dit document zijn afgelezen uit de echte volledige-run-uitvoer
 (de uitvoermap, `--uit`, van de eerste volledige run, 23-09-2026, zie VOORTGANG.md; met
 `pyarrow.parquet.ParquetFile`, zonder de data zelf in te lezen), niet uit het ontwerp of het geheugen
-overgenomen.
+overgenomen. De pijplijn verwerkt nu de versie van 27-10-2026 van de bron, zonder `mapping.csv` en
+zonder logger- en serienummers (uitvoercontractversie `2026-10-28-vierde-opzet`). De drie CSV-bestanden
+hebben in die versie dezelfde koppen en bestandsdatums, en de resultatentabel dezelfde 212 woningen;
+alleen het `info`-blad heeft een andere tekst, dus het rijaantal van `info_metadata` kan afwijken.
 
 ## 1. Wat deze set is
 
@@ -25,7 +28,7 @@ Low Can You Go*), uitgevoerd door **Deltares** met installatiebedrijf Feenstra e
 warmtebedrijven Vattenfall, HVC, SVP, Eneco en ENnatuurlijk; MMIP-projectnummer TEUE819001.
 
 - **Aantal woningen per tabel** (ze lopen uiteen, zie §8): 220 in `boiler_temp`, 223 in
-  `thermostat_temp`, 243 in `mapping` (sleuteltabel), 212 in `resultaten`.
+  `thermostat_temp`, 212 in `resultaten`.
 - **Gemeten periode.** Het eindrapport (Pothof, Vreeken & Van Meerkerk, *Field measurements on lower
   radiator temperatures in existing buildings*, Deltares, 13 september 2022, p. 11) noemt het
   installatievenster van de NIEUWE instrumentatie (de debietmeter en de twee temperatuursensoren op
@@ -48,8 +51,8 @@ warmtebedrijven Vattenfall, HVC, SVP, Eneco en ENnatuurlijk; MMIP-projectnummer 
 - **Data-eigenaar, licentie en meldplicht:** zie [`GEBRUIKSVOORWAARDEN.md`](../GEBRUIKSVOORWAARDEN.md).
   Kort samengevat: Deltares is eigenaar, er wordt geen licentienaam genoemd, en gebruik moet gemeld
   worden op <kite@rvo.nl> vóórdat er iets naar buiten gaat.
-- **Hoe je de brondata zelf verkrijgt:** eveneens in GEBRUIKSVOORWAARDEN.md (de open URL, bestandsgrootte
-  en sha256 van het archief).
+- **Hoe je de brondata zelf verkrijgt:** eveneens in GEBRUIKSVOORWAARDEN.md (de open URL, de versie
+  en de bestandsgrootte van het archief).
 
 ## 2. In- en uitsluitcriteria van het oorspronkelijke project
 
@@ -77,7 +80,7 @@ vergelijkbare aanvoer-/retourtemperaturen kregen; dat is dus zelf al een ingreep
 meting van de oorspronkelijke situatie.
 
 **Wat wél met zekerheid uit de data zelf volgt** (kolomnamen en de aanwezigheid van een
-geïnstalleerd-radiatorvermogen in `resultaten.parquet`, zie §5.5): het gaat om **gasketelwoningen**
+geïnstalleerd-radiatorvermogen in `resultaten.parquet`, zie §5.4): het gaat om **gasketelwoningen**
 met een cv-ketel, een thermostaat en radiatoren; huizen zonder gasketel of zonder radiatorafgifte
 horen per definitie niet in deze dataset.
 
@@ -131,7 +134,7 @@ eindrapport (Pothof et al., 2022, p. 9-11):
   onderdeel van het archief dat deze repo verwerkt**; het wordt hier genoemd omdat het mede de
   keuze voor Europe/Amsterdam als weergavezone onderbouwt (§4).
 - Per woning is bovendien het **opgenomen (geïnstalleerde) radiatorvermogen** bekend, opgenomen in
-  de resultatentabel (§5.5), afgeleid uit radiatortype en -afmetingen die tijdens een fysiek
+  de resultatentabel (§5.4), afgeleid uit radiatortype en -afmetingen die tijdens een fysiek
   huisbezoek zijn opgenomen (p. 15).
 
 Sensormerk, montagehoogte, kalibratie en meetonzekerheid van de individuele sensoren zijn niet in het
@@ -299,21 +302,7 @@ dan de gas- en branderuurkolommen, WEL naar `NaN` vervangen (in de gewone kolom,
 gevlagd), vóórdat de omrekening naar Pa plaatsvindt (`p_cv_*__Pa = p_cv_*__bar × 1e5`); zo blijft
 `NaN` gewoon `NaN` in plaats van een absurde `-100.000 Pa`.
 
-### 5.4 `mapping.parquet`
-
-Eén tabel, sleuteltabel. **243 rijen** (volledig gelezen).
-
-| kolom | type | eenheid | interval | beschrijving | bronkolom | opmerking |
-|---|---|---|---|---|---|---|
-| `home_id__str` | string | | eenmalig | pseudoniem van de woning | `house` | |
-| `logger_id__str` | string | | eenmalig | logger-identificatie | `logger_id` | |
-| `serial_no__str` | string | | eenmalig | serienummer van de logger | `serial_no` | |
-| `heater_id__str` | string | | eenmalig | ketel-identificatie | `heater_id` | |
-
-Geen kwaliteitsvlaggen, geen afgeleide kolommen: dit is een letterlijke, hernoemde kopie. Zie §8
-voor het verschil in aantal woningen ten opzichte van `boiler_temp`/`thermostat_temp`.
-
-### 5.5 `resultaten.parquet`
+### 5.4 `resultaten.parquet`
 
 Eén tabel, per woning eenmalig: de 2R2C-modelparameters, ontwerp- en geïnstalleerd vermogen,
 woningkenmerken. **212 rijen** (volledig gelezen).
@@ -322,8 +311,6 @@ woningkenmerken. **212 rijen** (volledig gelezen).
 |---|---|---|---|---|---|---|
 | `resultaat_volgnummer__int` | int64 | | eenmalig | oorspronkelijke rijvolgorde in de bron-xlsx | `Order` | geen fysische grootheid, bewust bewaard als herkomst van de volgorde (§8) |
 | `home_id__str` | string | | eenmalig | pseudoniem van de woning | `woning_id` | |
-| `logger_id__str` | string | | eenmalig | logger-identificatie | `logger_id` | vóór contractversie "2026-09-23-tweede-opzet" was dit `int64` ondanks de `__str`-naam (§8); expliciet gecast met `kolommen.naar_string_zonder_punt0` |
-| `serial_no__str` | string | | eenmalig | serienummer van de logger | `serial_no` | |
 | `model_training_fout__onbekend` | double | **onbekend** | eenmalig | modelfout, trainingsdeel | `model_training_rms` | eenheid bewust `__onbekend`, niet gedocumenteerd door Deltares (§8) |
 | `model_validatie_fout__onbekend` | double | **onbekend** | eenmalig | modelfout, validatiedeel | `model_validation_rms` | |
 | `model_training_bias__onbekend` | double | **onbekend** | eenmalig | modelbias, trainingsdeel | `model_training_mean_bias_error` | |
@@ -407,7 +394,7 @@ deze repo niet te verifiëren. Wie hiermee rekent, moet dit zelf controleren (bi
 grootte-orde van een paar `Ci`-waarden te vergelijken met een fysisch plausibele thermische massa
 voor een woninginterieur).
 
-### 5.6 `info_metadata.parquet`
+### 5.5 `info_metadata.parquet`
 
 Eén tabel: het `info`-blad van de resultatentabel, als tekstuele herkomst, niet geïnterpreteerd.
 **17 rijen** (volledig gelezen).
@@ -417,7 +404,7 @@ Eén tabel: het `info`-blad van de resultatentabel, als tekstuele herkomst, niet
 | `regel__int` | int64 | | | regelnummer in het oorspronkelijke `info`-blad | (rijindex van het `info`-blad) | |
 | `tekst__str` | string | | | tekst van de regel, celwaarden samengevoegd met `" \| "` | (celwaarden van het `info`-blad) | geen vertaling, geen interpretatie; dit is herkomst, geen meetgrootheid |
 
-### 5.7 `dekking.parquet`
+### 5.6 `dekking.parquet`
 
 Eén tabel: dekkingsstatistiek per woning per bron. **443 rijen** (220 `boiler_temp` + 223
 `thermostat_temp`, volledig gelezen).
@@ -474,11 +461,12 @@ categorie na).
 ### 6.1 Volledige scan van de bronbestanden op tekstwaarden en onbekende sentinels
 
 Gemeten op 03-10-2026 met `python -m warmingup_preprocessing.bronscan` (`bronscan.py`), over ELKE rij
-van ELKE kolom van de vier CSV-bestanden in `data-en-resultaten.zip` en over de resultatentabel, dus
-geen steekproef. De bron is als tekst gelezen; een veld telt als "niet numeriek" als het niet leeg is
+van ELKE kolom van de CSV-bestanden in `data-en-resultaten.zip` en over de resultatentabel, dus
+geen steekproef. Gemeten op de vorige versie van de bron; de drie CSV-bestanden hieronder zijn in de
+versie van 27-10-2026 ongewijzigd van kop en bestandsdatum. De bron is als tekst gelezen; een veld telt als "niet numeriek" als het niet leeg is
 en geen getal, en voor de tijd-, dag- en woningkolom als het niet de verwachte vorm heeft (ISO-8601
 met `Z`, `JJJJ-MM-DD`, `WU<n>`). Geen enkel bestand heeft een rij met een afwijkend aantal velden. De
-kolommen `House`/`house`, `Time` en `Day` hebben nergens een afwijkende vorm.
+kolommen `House`, `Time` en `Day` hebben nergens een afwijkende vorm.
 
 | bestand | kolom | niet-numerieke waarden | getalbereik | bekende en denkbare sentinelwaarden als getal |
 |---|---|---|---|---|
@@ -489,7 +477,6 @@ kolommen `House`/`house`, `Time` en `Day` hebben nergens een afwijkende vorm.
 | | gemeten temperatuur | `null`: 1.749, in 193 woningen | -319,6 tot 325,55 | geen |
 | `boiler-24h-stats.csv` (199.776 rijen, 223 woningen) | de vier gas- en branderuurkolommen | `NaN`: 23 per kolom, in dezelfde 12 woningen | gas tapwater -429.229,8 tot 429.326,6 m³; gas verwarming -89.363,2 tot 89.607,3 m³; branderuren -265.763,7 tot 132.750,2 h (tapwater) en -55.366,3 tot 27.707,1 h (verwarming) | geen |
 | | de drie waterdrukkolommen | geen | -1 tot 3,65 bar | -1: 2 per kolom |
-| `mapping.csv` (243 rijen) | `logger_id`, `serial_no`, `heater_id` | geen (wel leeg: 20, 3 en 24 keer) | n.v.t. | n.v.t. |
 
 Wat dit zegt:
 
@@ -544,7 +531,7 @@ dataset = ds.dataset("data/processed/boiler_temp", format="parquet", partitionin
 tabel = dataset.to_table(filter=ds.field("home_id__str") == "WU0")  # of zonder filter: alles
 ```
 
-De kleine tabellen (`etmaal.parquet`, `mapping.parquet`, `resultaten.parquet`,
+De kleine tabellen (`etmaal.parquet`, `resultaten.parquet`,
 `info_metadata.parquet`, `dekking.parquet`) zijn elk klein genoeg om in één keer te lezen:
 
 ```python
@@ -554,17 +541,19 @@ resultaten = pd.read_parquet("data/processed/resultaten.parquet")
 ```
 
 De kleine tabellen zijn gewone Parquet-bestanden zonder woningsleutel in het pad; `datapackage.json`
-(zie §9) beschrijft alle zeven tabellen machineleesbaar, inclusief het onderscheid tussen de
+(zie §9) beschrijft alle zes tabellen machineleesbaar, inclusief het onderscheid tussen de
 patroon-vorm van het pad (generiek) en de expliciete bestandenlijst (na een concrete run).
 
-**Uitvoercontractversie:** `2026-09-23-derde-opzet` (`manifest.UITVOER_CONTRACT_VERSIE`, staat ook
+**Uitvoercontractversie:** `2026-10-28-vierde-opzet` (`manifest.UITVOER_CONTRACT_VERSIE`, staat ook
 in elke regel van `_manifest.jsonl` en in `_voortgang.json`). Deze versie hoort omhoog te gaan zodra
 de vorm of betekenis van de uitvoer verandert; sinds `2026-09-23-eerste-opzet` (de versie van de
-eerste volledige run) is dat twee keer gebeurd: `q_flag_tijdstip_dubbel__bool` plus
-`logger_id__str` als string (`2026-09-23-tweede-opzet`), en Europe/Amsterdam als weergavezone in
-plaats van UTC (`2026-09-23-derde-opzet`, §4). Een bestaande uitvoermap van vóór deze wijzigingen
-hoeft niet opnieuw uit de brondata opgebouwd te worden: `python -m warmingup_preprocessing.migreer
---uit <map>` migreert hem in-place (zie de moduledocstring van `migreer.py`).
+eerste volledige run) is dat drie keer gebeurd: `q_flag_tijdstip_dubbel__bool`
+(`2026-09-23-tweede-opzet`), Europe/Amsterdam als weergavezone in plaats van UTC
+(`2026-09-23-derde-opzet`, §4), en de overstap naar de versie van 27-10-2026 van de bron, zonder
+`mapping.csv` en zonder logger- en serienummers (`2026-10-28-vierde-opzet`): `mapping.parquet`
+vervalt en `resultaten.parquet` heeft geen `logger_id__str` en `serial_no__str` meer. Een uitvoermap
+van een oudere contractversie bouw je opnieuw op met een volledige run, bij voorkeur in een nieuwe
+uitvoermap.
 
 ## 8. Bekende beperkingen en open vragen
 
@@ -578,17 +567,17 @@ hoeft niet opnieuw uit de brondata opgebouwd te worden: `python -m warmingup_pre
 - **`__onbekend` als eenheid** voor `model_training_fout__onbekend`,
   `model_validatie_fout__onbekend`, `model_training_bias__onbekend`, `model_validatie_bias__onbekend`
   in `resultaten.parquet`: Deltares/het eindrapport documenteert de eenheid van deze vier kolommen
-  niet expliciet (§5.5); aannemen dat het bijvoorbeeld graden is, zou een gok als feit presenteren.
+  niet expliciet (§5.4); aannemen dat het bijvoorbeeld graden is, zou een gok als feit presenteren.
 - **`FLOW_BOVENGRENS__l_h = 5.000`** (de plausibiliteitsgrens voor debiet in `boiler_temp`) is een
   orde-van-grootte-keuze van deze pijplijn, geen gemeten of door Deltares opgegeven grens.
-- **`Ci`/`Ce`-eenheid: rapport en brondata spreken elkaar tegen** (§5.5): het eindrapport noemt
+- **`Ci`/`Ce`-eenheid: rapport en brondata spreken elkaar tegen** (§5.4): het eindrapport noemt
   Wh/°C, de xlsx-kolomkop zelf zegt J/C (J/K) -- een factor 3600. Deze repo neemt de letterlijke
   bronkolomkop over; welke conventie de GETALLEN volgen is niet geverifieerd.
 - **`resultaten.parquet` heeft 212 rijen**, wat noch met de steekproefomvang (220, eindrapport p. 7)
-  noch met het aantal geslaagde modelkalibraties (187, eindrapport p. 18) overeenkomt (§5.5); niet
+  noch met het aantal geslaagde modelkalibraties (187, eindrapport p. 18) overeenkomt (§5.4); niet
   verklaard in wat deze repo weet.
-- **Aantal woningen loopt per tabel uiteen** (220 in `boiler_temp`, 223 in `thermostat_temp`, 243 in
-  `mapping`, 212 in `resultaten`): deels te verklaren uit de 212-vs-220-vs-187-discrepantie
+- **Aantal woningen loopt per tabel uiteen** (220 in `boiler_temp`, 223 in `thermostat_temp`, 212 in
+  `resultaten`): deels te verklaren uit de 212-vs-220-vs-187-discrepantie
   hierboven, verder niet volledig verklaard (ontwerp-preprocessing.md §1).
 - **De tekstsentinel `"x"`** in `Boiler Water Supply Temperature (°C)` (1.622.716 keer, in 9 van de 220
   woningen, vrijwel allemaal in WU1 en WU177; ook 881 keer in de retourtemperatuur, §6.1) is door deze
@@ -609,7 +598,7 @@ hoeft niet opnieuw uit de brondata opgebouwd te worden: `python -m warmingup_pre
 ## 9. Datapackage (machineleesbare beschrijving)
 
 `datapackage.json` (repo-root, en aan het eind van elke run naast de uitvoer geschreven) is een
-machineleesbare beschrijving van deze zeven tabellen volgens de
+machineleesbare beschrijving van deze zes tabellen volgens de
 [Frictionless Data Package-standaard](https://specs.frictionlessdata.io/data-package/): per tabel een
 Table Schema (kolomnamen, types, beschrijvingen, en waar zinvol een primaire sleutel of de reden
 waarom die ontbreekt), plus licentie- en herkomstinformatie. Het wordt UIT DE CODE gegenereerd
