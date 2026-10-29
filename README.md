@@ -18,7 +18,7 @@ wij weten de enige Nederlandse veldcampagne die de **afgiftekant** zo meet.
 ## Wat eruit komt
 
 Parquet per woning (zstd) voor de twee grote minuutbestanden, plus tabellen voor de etmaalstatistiek,
-de sleuteltabel en de resultatentabel. Zie [`ontwerp-preprocessing.md`](ontwerp-preprocessing.md)
+de resultatentabel, de metadata en de dekking per woning. Zie [`ontwerp-preprocessing.md`](ontwerp-preprocessing.md)
 voor de volledige kolomvertaling, de keuzes en de aannames.
 
 - streamend lezen uit de originele zip, zonder uitpakken;
