@@ -15,7 +15,7 @@ def test_run_volledig_op_kleine_synthetische_zip(test_zip_gesorteerd: Path, tmp_
     assert (uit_dir / "boiler_temp" / "home_id=WU0.parquet").is_file()
     assert (uit_dir / "thermostat_temp" / "home_id=WU0.parquet").is_file()
     assert (uit_dir / "etmaal.parquet").is_file()
-    assert (uit_dir / "mapping.parquet").is_file()
+    assert not (uit_dir / "mapping.parquet").exists()
     assert (uit_dir / "resultaten.parquet").is_file()
     assert (uit_dir / "info_metadata.parquet").is_file()
     assert (uit_dir / "dekking.parquet").is_file()
@@ -24,8 +24,9 @@ def test_run_volledig_op_kleine_synthetische_zip(test_zip_gesorteerd: Path, tmp_
     assert (uit_dir / "datapackage.json").is_file()
     assert (docs_dir / "data-quality.md").is_file()
 
-    mapping = pd.read_parquet(uit_dir / "mapping.parquet")
-    assert len(mapping) == 3
+    resultaten_df = pd.read_parquet(uit_dir / "resultaten.parquet")
+    assert len(resultaten_df) == 3
+    assert not {"logger_id__str", "serial_no__str", "heater_id__str"} & set(resultaten_df.columns)
     assert resultaat["duur__s"] > 0
 
 
@@ -39,7 +40,7 @@ def test_run_hervat_voegt_niets_dubbel_toe(test_zip_gesorteerd: Path, tmp_path: 
     pijplijn.run(test_zip_gesorteerd.parent, uit_dir, docs_dir=None)
     regels_na = manifest_pad.read_text(encoding="utf-8").splitlines()
 
-    # boiler_temp/thermostat_temp/etmaal/mapping/resultaten/info_metadata staan al: alleen
+    # boiler_temp/thermostat_temp/etmaal/resultaten/info_metadata staan al: alleen
     # "dekking" wordt bij elke run herbouwd (zie pijplijn.run), dus er komt hoogstens één regel bij.
     assert len(regels_na) <= len(regels_voor) + 1
 

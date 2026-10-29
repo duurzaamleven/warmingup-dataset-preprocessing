@@ -2,8 +2,9 @@
 """Streamend lezen uit ``data-en-resultaten.zip``, nooit uitgepakt naar schijf
 (ontwerp-preprocessing.md §1; GEBRUIKSVOORWAARDEN.md).
 
-Vijf van de zes leden staan met gewone Deflate in het archief en zijn met ``zipfile`` te openen;
-``thermostat-temp.csv`` staat met Deflate64 en gaat via ``deflate64.open_deflate64`` (zie die
+Ondersteund wordt de versie van 27-10-2026 van de bron, zonder ``mapping.csv`` en zonder logger- en
+serienummers; die heeft vijf leden. Vier daarvan staan met gewone Deflate in het archief en zijn met
+``zipfile`` te openen; ``thermostat-temp.csv`` staat met Deflate64 en gaat via ``deflate64.open_deflate64`` (zie die
 module). Deze module verbergt dat onderscheid achter één ``open_bron``-methode.
 """
 
@@ -21,12 +22,11 @@ from . import deflate64
 BOILER_TEMP = "boiler-temp.csv"
 THERMOSTAT_TEMP = "thermostat-temp.csv"
 BOILER_24H_STATS = "boiler-24h-stats.csv"
-MAPPING = "mapping.csv"
 README = "README.md"
 RESULTATEN_XLSX = "resultaat-tabel-WarmingUP_KITE openbare versie.xlsx"
 
-#: De zes verplichte leden van het archief; ontbreekt er één, dan is het geen bruikbare bron.
-VERPLICHTE_LEDEN = (BOILER_TEMP, THERMOSTAT_TEMP, BOILER_24H_STATS, MAPPING, README, RESULTATEN_XLSX)
+#: De vijf verplichte leden van het archief; ontbreekt er één, dan is het geen bruikbare bron.
+VERPLICHTE_LEDEN = (BOILER_TEMP, THERMOSTAT_TEMP, BOILER_24H_STATS, README, RESULTATEN_XLSX)
 
 #: Bestandsnamen waarvan de omvang zo groot is dat ze per woning worden opgesplitst; de rest wordt
 #: als één geheel gelezen (ontwerp-preprocessing.md §2).
@@ -52,7 +52,6 @@ class ZipBron:
         ontbrekend = [n for n in VERPLICHTE_LEDEN if n not in namen]
         if ontbrekend:
             raise BronError(f"{self.zip_pad.name}: ontbrekende leden {ontbrekend}")
-        self._mapping: pd.DataFrame | None = None
 
     def sluit(self) -> None:
         self._zip.close()
@@ -92,13 +91,6 @@ class ZipBron:
         stream: io.RawIOBase = _BegrensdeStream(ruw, max_bytes) if max_bytes is not None else ruw
         return io.BufferedReader(stream, buffer_size=1 << 20)
 
-    def lees_mapping(self) -> pd.DataFrame:
-        """``mapping.csv``, klein (243 rijen), in één keer. Kolommen nog NIET vertaald."""
-        if self._mapping is None:
-            with self._zip.open(MAPPING) as f:
-                self._mapping = pd.read_csv(f, dtype=str)
-        return self._mapping
-
     def lees_resultaten_ruw(self) -> pd.DataFrame:
         """De resultatentabel (blad ``Sheet1``), header op rij 5. Klein (212 rijen), in één keer."""
         from .kolommen import RESULTATEN_HEADER_RIJ
@@ -114,11 +106,6 @@ class ZipBron:
 
     def lees_readme(self) -> str:
         return self._zip.read(README).decode("utf-8")
-
-    def home_ids(self) -> list[str]:
-        """Alle woning-pseudoniemen uit ``mapping.csv``, gesorteerd (ontwerp-preprocessing.md §1: 243
-        stuks, waarvan niet allemaal een ``logger_id`` en dus niet allemaal minuutdata hebben)."""
-        return sorted(self.lees_mapping()["house"].astype(str))
 
 
 class _TelendeStream(io.RawIOBase):

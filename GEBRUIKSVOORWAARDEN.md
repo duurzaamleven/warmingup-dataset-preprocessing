@@ -19,7 +19,7 @@ Van de KITE-pagina van het project, kopje "Licentie en gebruik":
 Deltares is volgens dezelfde pagina auteur en **data-eigenaar**. Er wordt **geen licentienaam**
 genoemd: geen CC BY, geen CC0, geen ODbL. Er staat dus niet dat de data herverspreid mag worden.
 
-Het archief zelf bevat geen licentiebestand, alleen een `README.md` van vier regels die niets over
+Het archief zelf bevat geen licentiebestand, alleen een `README.md` van drie regels die niets over
 gebruik zegt.
 
 ## Wat dit betekent voor deze repo
@@ -46,11 +46,14 @@ Het archief staat op een open URL, aangekondigd via de KITE-projectpagina *How-L
 community *Kennis- en Dataplatform Individuele Technieken* op <https://kennisdelen.rvo.nl/>:
 
 - <https://data.inversable.cloud/how-low-can-you-go/data-en-resultaten.zip>
-  (1.798.671.500 bytes, 11,5 GiB uitgepakt; sha256
-  `ecc288dda7b49cba1896f127f8269b6fb80e848bc96d26aa1c2a8598dafa87e0`, opgehaald 22-09-2026)
+  (versie van 27-10-2026, zonder `mapping.csv` en zonder logger- en serienummers; 1.798.660.453
+  bytes, 11,5 GiB uitgepakt; sha256
+  `cb33481174c70ad22a1116d4d6f54921e0c4133ca748d64931b3fee1a2a85ffc`)
 
 Zet het archief ongewijzigd in `data/raw/`. **Pak het niet uit**: de pijplijn leest streamend uit de
 zip, en één CSV is uitgepakt al 9,8 GB.
 
-De KITE-pagina noemt onder "Versie" *"kite-versie 1.0 - oktober 2026"*, terwijl de set op 22-09-2026
-is opgehaald. Welke versie je precies hebt, stel je dus vast met de sha256, niet met de pagina.
+De KITE-pagina noemt onder "Versie" *"kite-versie 1.0 - oktober 2026"*; die aanduiding onderscheidt
+de versies van het archief niet. Welke versie je hebt, stel je dus vast aan het archief zelf: de
+omvang hierboven en de vijf leden (`boiler-temp.csv`, `thermostat-temp.csv`, `boiler-24h-stats.csv`,
+`README.md` en de resultatentabel, zonder `mapping.csv`). De pijplijn is gebouwd op deze versie.

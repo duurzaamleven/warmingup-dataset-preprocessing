@@ -40,16 +40,20 @@ log = logging.getLogger(__name__)
 #: zie VOORTGANG.md): twee vormveranderingen van de uitvoer.
 #: (1) Nieuwe kolom ``q_flag_tijdstip_dubbel__bool`` in ``boiler_temp`` en ``thermostat_temp``
 #: (sentinels.flag_tijdstip_dubbel): dubbele tijdstempels worden nu per rij gevlagd, niet alleen
-#: geteld in dekking.parquet. (2) ``logger_id__str`` in ``resultaten.parquet`` is nu een string,
-#: net als in ``mapping.parquet``; daarvoor was het Parquet-type daar int64 ondanks de ``__str``-naam
-#: (kolommen.naar_string_zonder_punt0). Zie docs/datacatalogus.md voor beide.
+#: geteld in dekking.parquet. (2) een identificatiekolom in ``resultaten.parquet`` werd een string
+#: in plaats van int64 (die kolom is sinds "2026-10-28-vierde-opzet" vervallen).
 #:
 #: "2026-09-23-derde-opzet" t.o.v. "2026-09-23-tweede-opzet": de tz-aware tijdstempels (``tijdstip``
 #: in boiler_temp/thermostat_temp, ``eerste_tijdstip``/``laatste_tijdstip`` in dekking.parquet) staan
 #: nu in de weergavezone Europe/Amsterdam in plaats van UTC (``tijd.TIJDZONE_WEERGAVE``,
 #: ``tijd.naar_weergave_tijdzone``). Het instant verandert niet, alleen de tz-metadata; zie
 #: docs/datacatalogus.md §4 voor de onderbouwing.
-UITVOER_CONTRACT_VERSIE = "2026-09-23-derde-opzet"
+#:
+#: "2026-10-28-vierde-opzet" t.o.v. "2026-09-23-derde-opzet": gebouwd op de versie van 27-10-2026 van
+#: de bron, zonder mapping.csv en zonder logger- en serienummers. ``mapping.parquet`` vervalt, en
+#: ``resultaten.parquet`` verliest ``logger_id__str`` en ``serial_no__str``. Alle andere kolommen,
+#: eenheden en de tijdzone zijn ongewijzigd.
+UITVOER_CONTRACT_VERSIE = "2026-10-28-vierde-opzet"
 
 MANIFEST_BESTANDSNAAM = "_manifest.jsonl"
 

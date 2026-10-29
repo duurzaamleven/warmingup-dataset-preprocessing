@@ -326,7 +326,6 @@ def run(
 
     voortgang.zet_fase("kleine_tabellen")
     for onderdeel, bouwer, bestandsnaam in (
-        ("mapping", tabellen.bouw_mapping, "mapping.parquet"),
         ("resultaten", tabellen.bouw_resultaten, "resultaten.parquet"),
         ("info_metadata", tabellen.bouw_info_metadata, "info_metadata.parquet"),
     ):
@@ -378,7 +377,7 @@ def _droogloop(bron, uit_dir: Path, test_mb: int | None, min_vrije_schijfruimte_
 
     if uit_dir.exists():
         manifest = Manifest(uit_dir)
-        for onderdeel in ("boiler_temp", "thermostat_temp", "etmaal", "mapping", "resultaten", "info_metadata", "dekking"):
+        for onderdeel in ("boiler_temp", "thermostat_temp", "etmaal", "resultaten", "info_metadata", "dekking"):
             n = len(manifest.voltooide_sleutels(onderdeel))
             if n:
                 print(f"  {onderdeel}: {n} onderdeel/onderdelen al voltooid volgens het manifest")

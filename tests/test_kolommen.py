@@ -1,6 +1,4 @@
 # SPDX-License-Identifier: EUPL-1.2
-import pandas as pd
-
 from warmingup_preprocessing import kolommen
 
 
@@ -28,23 +26,7 @@ def test_resultaten_kolommen_zonder_lege_kolom():
     assert kolommen.RESULTATEN_GENEGEERDE_KOLOM not in kolommen.RESULTATEN_KOLOMMEN.values()
 
 
-def test_naar_string_zonder_punt0_int64():
-    kolom = pd.Series([20000001, 20000002], dtype="int64")
-    resultaat = kolommen.naar_string_zonder_punt0(kolom)
-    assert resultaat.tolist() == ["20000001", "20000002"]
-
-
-def test_naar_string_zonder_punt0_float64_met_ontbrekende_waarde():
-    # pandas.read_excel geeft float64 zodra één cel in een numerieke kolom leeg is; een kale
-    # .astype(str) zou hier "20000001.0" opleveren, zie kolommen.naar_string_zonder_punt0.
-    kolom = pd.Series([20000001.0, float("nan"), 20000003.0], dtype="float64")
-    resultaat = kolommen.naar_string_zonder_punt0(kolom)
-    assert resultaat.iloc[0] == "20000001"
-    assert pd.isna(resultaat.iloc[1])
-    assert resultaat.iloc[2] == "20000003"
-
-
-def test_naar_string_zonder_punt0_al_tekst_blijft_ongewijzigd():
-    kolom = pd.Series(["20000001", "20000002"], dtype=object)
-    resultaat = kolommen.naar_string_zonder_punt0(kolom)
-    assert resultaat.tolist() == ["20000001", "20000002"]
+def test_resultaten_kolommen_zonder_logger_en_serienummer():
+    # Versie van 27-10-2026 van de bron: deze kolommen bestaan niet meer in Sheet1.
+    assert "logger_id" not in kolommen.RESULTATEN_KOLOMMEN
+    assert "serial_no" not in kolommen.RESULTATEN_KOLOMMEN

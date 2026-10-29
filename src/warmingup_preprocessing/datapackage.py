@@ -5,9 +5,9 @@ DE CODE, niet met de hand bijgehouden.
 **Bronnen van waarheid.** De velden per resource komen uit de ``pyarrow.Schema``-objecten die de
 pijplijn zelf al gebruikt om te schrijven of te controleren
 (:data:`warmingup_preprocessing.pijplijn.BOILER_TEMP_SCHEMA`/``THERMOSTAT_TEMP_SCHEMA``,
-:data:`warmingup_preprocessing.tabellen.ETMAAL_SCHEMA`/``MAPPING_SCHEMA``/``RESULTATEN_SCHEMA``/
-``INFO_METADATA_SCHEMA``, :data:`warmingup_preprocessing.dekking.DEKKING_SCHEMA`). De laatste vier
-zijn REFERENTIESCHEMA's: ze sturen het schrijfpad zelf niet aan (``bouw_mapping`` e.d. laten
+:data:`warmingup_preprocessing.tabellen.ETMAAL_SCHEMA`/``RESULTATEN_SCHEMA``/
+``INFO_METADATA_SCHEMA``, :data:`warmingup_preprocessing.dekking.DEKKING_SCHEMA`). De laatste drie
+zijn REFERENTIESCHEMA's: ze sturen het schrijfpad zelf niet aan (``bouw_resultaten`` e.d. laten
 ``pandas.to_parquet`` het Parquet-type nog steeds uit de dtypes afleiden), maar zijn geverifieerd
 tegen de echte volledige-run-uitvoer (23-09-2026) en worden bewaakt door een test die borgt dat elk
 Parquet-veld in het datapackage staat en omgekeerd (``tests/test_datapackage.py``): de twee kunnen
@@ -22,8 +22,8 @@ zie dat bestand voor de volledige toelichting per kolom, inclusief formules en u
 voor (zie ``q_flag_tijdstip_dubbel__bool``, ontdekt en gevlagd, niet ontdubbeld). Ook voor ``etmaal``
 is ``(home_id__str, datum__str)`` niet uniek: 5.856 van de 199.776 rijen in de echte
 volledige-run-uitvoer (23-09-2026) hebben een dubbele combinatie, een bevinding bij het schrijven van
-deze module (niet eerder gedocumenteerd; zie VOORTGANG.md). Voor de overige vier tabellen (mapping,
-resultaten, info_metadata, dekking) is de voor de hand liggende sleutel WEL uniek gebleken op diezelfde
+deze module (niet eerder gedocumenteerd; zie VOORTGANG.md). Voor de overige drie tabellen (resultaten,
+info_metadata, dekking) is de voor de hand liggende sleutel WEL uniek gebleken op diezelfde
 uitvoer, en die staat er daarom wel bij.
 
 **Resourcepad van de twee per-woning-tabellen: altijd een patroon-string.** Data Package v1 staat
@@ -61,10 +61,13 @@ from .manifest import UITVOER_CONTRACT_VERSIE
 
 DATAPACKAGE_BESTANDSNAAM = "datapackage.json"
 
-#: Bron van het archief en de sha256, letterlijk overgenomen uit GEBRUIKSVOORWAARDEN.md (22-09-2026).
+#: Bron van het archief: de versie van 27-10-2026, zonder mapping.csv en zonder logger- en
+#: serienummers (zie GEBRUIKSVOORWAARDEN.md). Omvang en sha256 zijn vastgesteld op de download van
+#: 29-10-2026.
 BRON_DOWNLOAD_URL = "https://data.inversable.cloud/how-low-can-you-go/data-en-resultaten.zip"
-BRON_SHA256 = "ecc288dda7b49cba1896f127f8269b6fb80e848bc96d26aa1c2a8598dafa87e0"
-BRON_OMVANG__B = 1_798_671_500
+BRON_VERSIE = "2026-10-27"
+BRON_SHA256: str | None = "cb33481174c70ad22a1116d4d6f54921e0c4133ca748d64931b3fee1a2a85ffc"
+BRON_OMVANG__B = 1_798_660_453
 KITE_PAGINA_URL = "https://kennisdelen.rvo.nl/"  # community "Kennis- en Dataplatform Individuele Technieken", projectpagina How-Low-Can-You-Go
 
 #: Arrow-type -> Table Schema-type (https://specs.frictionlessdata.io/table-schema/#types-and-formats).
@@ -151,18 +154,10 @@ VELD_BESCHRIJVINGEN: dict[str, dict[str, str]] = {
         "q_flag_druk_gem_onbekend__bool": "True wanneer de bronwaarde van p_cv_gem gelijk was aan -1 bar.",
         "q_flag_druk_max_onbekend__bool": "True wanneer de bronwaarde van p_cv_max gelijk was aan -1 bar.",
     },
-    "mapping": {
-        "home_id__str": "Pseudoniem van de woning (bron: house).",
-        "logger_id__str": "Logger-identificatie (bron: logger_id).",
-        "serial_no__str": "Serienummer van de logger (bron: serial_no).",
-        "heater_id__str": "Ketel-identificatie (bron: heater_id).",
-    },
     "resultaten": {
         "resultaat_volgnummer__int": "Oorspronkelijke rijvolgorde in de bron-xlsx (bron: Order); geen fysische "
         "grootheid, bewaard als herkomst van de volgorde.",
         "home_id__str": "Pseudoniem van de woning (bron: woning_id).",
-        "logger_id__str": "Logger-identificatie (bron: logger_id).",
-        "serial_no__str": "Serienummer van de logger (bron: serial_no).",
         "model_training_fout__onbekend": "Modelfout, trainingsdeel (bron: model_training_rms). Eenheid bewust "
         "\"onbekend\": niet gedocumenteerd door Deltares.",
         "model_validatie_fout__onbekend": "Modelfout, validatiedeel (bron: model_validation_rms). Eenheid onbekend.",
@@ -207,13 +202,12 @@ VELD_BESCHRIJVINGEN: dict[str, dict[str, str]] = {
 #: Velden die nooit ontbreken (gebruikt om constraints.required te zetten): sleutel- en
 #: tijdstipkolommen, niet de meetwaarden of vlaggen zelf (die MOGEN ontbreken, dat is precies waar de
 #: "ontbrekend"-vlaggen voor bestaan).
-_VEREISTE_VELDEN = {"home_id__str", "tijdstip", "datum__str", "logger_id__str", "regel__int", "bron__cat"}
+_VEREISTE_VELDEN = {"home_id__str", "tijdstip", "datum__str", "regel__int", "bron__cat"}
 
-#: (resourcenaam, primaryKey-velden) voor de vier tabellen waar de sleutel WEL uniek is gebleken op de
+#: (resourcenaam, primaryKey-velden) voor de drie tabellen waar de sleutel WEL uniek is gebleken op de
 #: echte volledige-run-uitvoer (23-09-2026, zie de moduledocstring); boiler_temp, thermostat_temp en
 #: etmaal staan hier bewust NIET in.
 _PRIMARY_KEYS: dict[str, list[str]] = {
-    "mapping": ["home_id__str"],
     "resultaten": ["home_id__str"],
     "info_metadata": ["regel__int"],
     "dekking": ["home_id__str", "bron__cat"],
@@ -287,6 +281,18 @@ def _resource_enkel_bestand(naam: str, schema: pa.Schema, titel: str, bestandsna
     return resource
 
 
+def _bron_archief() -> dict:
+    bron = {
+        "title": f"data-en-resultaten.zip (ruwe brondata, Deltares), versie van {BRON_VERSIE}",
+        "path": BRON_DOWNLOAD_URL,
+        "version": BRON_VERSIE,
+        "bytes": BRON_OMVANG__B,
+    }
+    if BRON_SHA256 is not None:
+        bron["sha256"] = BRON_SHA256
+    return bron
+
+
 def bouw_datapackage(
     contract_versie: str = UITVOER_CONTRACT_VERSIE,
     boiler_temp_bestanden: list[str] | None = None,
@@ -311,7 +317,6 @@ def bouw_datapackage(
             thermostat_temp_bestanden,
         ),
         _resource_enkel_bestand("etmaal", tabellen.ETMAAL_SCHEMA, "Etmaalstatistiek (gas, branderuren, waterdruk)", "etmaal.parquet"),
-        _resource_enkel_bestand("mapping", tabellen.MAPPING_SCHEMA, "Sleuteltabel: logger/serienummer/ketel-id per woning", "mapping.parquet"),
         _resource_enkel_bestand(
             "resultaten", tabellen.RESULTATEN_SCHEMA,
             "2R2C-modelparameters, ontwerp- en geinstalleerd vermogen, woningkenmerken", "resultaten.parquet",
@@ -348,12 +353,7 @@ def bouw_datapackage(
                 "title": "How Low Can You Go, KITE-projectpagina (Kennis- en Dataplatform Individuele Technieken)",
                 "path": KITE_PAGINA_URL,
             },
-            {
-                "title": "data-en-resultaten.zip (ruwe brondata, Deltares)",
-                "path": BRON_DOWNLOAD_URL,
-                "sha256": BRON_SHA256,
-                "bytes": BRON_OMVANG__B,
-            },
+            _bron_archief(),
         ],
         "contributors": [
             {"title": "Deltares", "role": "author", "organization": "Deltares"},

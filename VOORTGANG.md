@@ -1,21 +1,51 @@
 # Voortgang van deze repo
 
-Bijgewerkt: 03-10-2026. Dit document zegt wat er is, wat gemeten is en wat openstaat. Tijden in de
+Bijgewerkt: 28-10-2026. Dit document zegt wat er is, wat gemeten is en wat openstaat. Tijden in de
 logs en hieronder zijn lokale tijd. De bouwgeschiedenis verderop blijft staan voor de redenering
 achter de keuzes; wat er eerder was, staat in de git-geschiedenis.
 
 ## Stand
 
-- De pijplijn is compleet en getest (`pytest -q`: 98 geslaagd, 3 slaan zichzelf over zonder de ruwe
-  zip in `data/raw/`; zie "Voor wie hier verder gaat").
+- De pijplijn verwerkt de versie van 27-10-2026 van de bron, zonder `mapping.csv` en zonder logger-
+  en serienummers (uitvoercontractversie `2026-10-28-vierde-opzet`; zie "Bronversie van 27-10-2026"
+  hieronder). Getest met synthetische data (`pytest -q`: 90 geslaagd, 3 slaan zichzelf over zonder de
+  ruwe zip in `data/raw/`). De volledige run op deze versie is gedaan (29-10-2026, zie hieronder).
 - De volledige run en de migratie naar uitvoercontractversie `2026-09-23-derde-opzet` zijn gedaan
-  (23-09-2026). De uitvoer is compleet en klopt rij voor rij met de bron.
+  (23-09-2026), op de vorige versie van de bron. Die uitvoer klopt rij voor rij met die bron, maar
+  hoort niet bij het huidige contract.
 - De twee kwaliteitstoetsen die nog openstonden zijn gedaan (03-10-2026): de intervalsemantiek over
   alle woningen en een volledige scan van de bronbestanden op tekstwaarden en andere sentinels.
   Uitkomsten hieronder en in `docs/datacatalogus.md` §6.1.
 - De ruwe zip staat niet meer in `data/raw/` maar op een netwerkschijf buiten deze repo; geef de map
   mee met `--raw-dir` (of de omgevingsvariabele `RAW` in `draai_bronscan.cmd`).
 - Open: zie "Open vragen".
+
+## Bronversie van 27-10-2026
+
+De bronhouder heeft op 27-10-2026 een nieuwe versie van `data-en-resultaten.zip` gepubliceerd op
+dezelfde URL (1.798.660.453 bytes, zie GEBRUIKSVOORWAARDEN.md), zonder `mapping.csv` en zonder logger-
+en serienummers. Vastgesteld door de centrale directory en de koppen op afstand te lezen, zonder de
+hele zip te downloaden:
+
+- Vijf leden in plaats van zes: `mapping.csv` ontbreekt; `README.md` (drie regels uitleg bij de
+  csv's) staat er nog.
+- In de resultatentabel (blad `Sheet1`) ontbreken de kolommen `logger_id` en `serial_no`; de kop
+  staat nog op rij 6 en er zijn nog 212 woningen. Het `info`-blad heeft een andere tekst.
+- De drie CSV-bestanden hebben dezelfde koppen en bestandsdatums als in de vorige versie.
+
+Wat er in de code veranderd is: `mapping.csv` is geen verplicht lid meer en `mapping.parquet` vervalt;
+`resultaten.parquet` verliest `logger_id__str` en `serial_no__str`; `migreer.py` en
+`draai_migratie.cmd` zijn verwijderd, omdat uitvoer van de vorige bronversie niet zonder de nieuwe
+bron om te zetten is. `draai_volledig.cmd` leest de zip nu uit de omgevingsvariabele `RAW`
+(standaard `data\raw`).
+
+**De volledige run (29-10-2026).** Na de download van de zip (sha256
+`cb33481174c70ad22a1116d4d6f54921e0c4133ca748d64931b3fee1a2a85ffc`, vastgelegd in `datapackage.py` en
+GEBRUIKSVOORWAARDEN.md) eerst een droogloop, daarna de volledige run met `--raw-dir` naar een map op de
+netwerkschijf: gestart om 01:10, klaar om 03:38 (8.891 s), zonder fouten. 220 woningen in
+`boiler_temp`, 223 in `thermostat_temp`; `resultaten.parquet` heeft 21 kolommen, zonder
+`logger_id__str` en `serial_no__str`; `mapping.parquet` is er niet. `docs/data-quality.md` is door deze
+run opnieuw geschreven.
 
 ## De volledige run en de migratie (23-09-2026)
 
@@ -98,8 +128,8 @@ minuut erna".
   0,024, 0,079, 0,157, 0,363. De mediane vertraging per woning is 0 bij 94 woningen, 1 bij 123 en 2
   bij 2; bij alle starts 0 bij 102, 1 bij 115 en 2 bij 2. Geen enkele woning heeft een negatieve
   mediaan.
-- **Geen samenhang met het loggertype.** Per loggerserie (eerste vier cijfers van `logger_id`: 2005,
-  2007, 2009) is de verdeling van de woningmedianen vrijwel gelijk (34/42/1, 34/46/0 en 24/35/1
+- **Geen samenhang met het loggertype.** Per loggerserie (drie series, afgeleid uit de sleuteltabel
+  van de vorige bronversie) is de verdeling van de woningmedianen vrijwel gelijk (34/42/1, 34/46/0 en 24/35/1
   woningen met mediaan 0, 1 en 2), dus het verschil tussen woningen is niet het verschil tussen drie
   loggertypen.
 
@@ -186,10 +216,9 @@ tabel met per bestand en kolom wat er gevonden is staat in `docs/datacatalogus.m
 
 - Alle code, tests en documenten staan gecommit. De branch `onderhoud/na-volledige-run` is gepusht;
   er is geen pull request en er is niet gemerged.
-- Een volledige run opnieuw: `draai_volledig.cmd` (zet `UITVOER` en `RAW` als de uitvoer of de zip
-  elders staan). Een bestaande uitvoermap omzetten naar de huidige contractversie:
-  `draai_migratie.cmd`. De twee toetsen hierboven: `draai_bronscan.cmd` en
-  `draai_intervalsemantiek.cmd`.
+- Een volledige run: `draai_volledig.cmd` (zet `UITVOER` en `RAW` als de uitvoer of de zip elders
+  staan; gebruik voor een nieuwe contractversie een nieuwe uitvoermap). De twee toetsen hierboven:
+  `draai_bronscan.cmd` en `draai_intervalsemantiek.cmd`.
 - Alles wat langer dan een paar minuten duurt, draai je los van een editor of chatsessie
   (`Start-Process ... -WindowStyle Hidden` met een van de `.cmd`-bestanden): de machine heeft weinig
   vrij geheugen en een proces uit een terminal gaat mee met de sessie.
@@ -489,6 +518,9 @@ onderzochte gebouwen; de vijf warmtebedrijven leveren in Europees Nederland. `UI
 naar `"2026-09-23-derde-opzet"`.
 
 ### Aanvullende eis: migratiescript in plaats van een herrun
+
+Achterhaald: `migreer.py` is verwijderd bij de overstap naar de bronversie van 27-10-2026
+(contractversie `2026-10-28-vierde-opzet`).
 
 `python -m warmingup_preprocessing.migreer --uit <map>` (nieuwe module `migreer.py`) migreert een
 bestaande uitvoermap van `"2026-09-23-eerste-opzet"` naar de huidige contractversie zonder de ruwe zip

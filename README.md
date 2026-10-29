@@ -91,7 +91,7 @@ aangevuld), zodat iemand van buitenaf zonder de log te lezen een ETA kan uitreke
 
 ```json
 {
-  "uitvoer_contract_versie": "2026-09-23-derde-opzet",
+  "uitvoer_contract_versie": "2026-10-28-vierde-opzet",
   "fase": "boiler_temp",
   "gestart_op": "2026-09-23T10:00:00+00:00",
   "laatst_bijgewerkt_op": "2026-09-23T10:04:12+00:00",
@@ -114,17 +114,17 @@ kleine_tabellen -> dekking -> kwaliteitsrapport -> datapackage -> klaar`. Zie
 ## Machineleesbare beschrijving: datapackage.json
 
 Naast `docs/datacatalogus.md` (voor mensen) schrijft de pijplijn aan het eind van elke run ook
-`datapackage.json`: een machineleesbare beschrijving van de zeven uitvoertabellen volgens de
+`datapackage.json`: een machineleesbare beschrijving van de zes uitvoertabellen volgens de
 [Frictionless Data Package-standaard](https://specs.frictionlessdata.io/data-package/) (kolomnamen,
 types, beschrijvingen, sleutels waar die uniek zijn). Wordt uit de code gegenereerd, niet met de
 hand bijgehouden; regenereren kan met `python -m warmingup_preprocessing.datapackage`.
 
-## Een bestaande uitvoermap migreren
+## Een uitvoermap van een oudere contractversie
 
-Na een wijziging van het uitvoercontract hoeft een al gedraaide, correcte uitvoermap niet opnieuw uit
-de brondata opgebouwd te worden: `python -m warmingup_preprocessing.migreer --uit <map>` zet hem
-in-place om naar de huidige contractversie (hervatbaar, idempotent). Zie de moduledocstring van
-`migreer.py` en `docs/datacatalogus.md` §7 voor wanneer dit van toepassing is.
+De pijplijn verwerkt de versie van 27-10-2026 van de bron, zonder `mapping.csv` en zonder logger- en
+serienummers (uitvoercontractversie `2026-10-28-vierde-opzet`). Uitvoer van een oudere
+contractversie bouw je opnieuw op met een volledige run in een nieuwe uitvoermap; zie
+`docs/datacatalogus.md` §7.
 
 ## Documenten
 

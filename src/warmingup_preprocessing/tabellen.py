@@ -1,8 +1,8 @@
 # SPDX-License-Identifier: EUPL-1.2
-"""De kleine, in-memory tabellen: etmaalstatistiek, mapping, resultatentabel, info-metadata
+"""De kleine, in-memory tabellen: etmaalstatistiek, resultatentabel, info-metadata
 (ontwerp-preprocessing.md §2). ``boiler-24h-stats.csv`` is met ~200.000 rijen en 11 MB streamend
-gelezen maar in één geheel weggeschreven; de andere drie passen ruim in het geheugen (243, 212 en
-23 rijen).
+gelezen maar in één geheel weggeschreven; de andere twee passen ruim in het geheugen (212 rijen en
+enkele tientallen regels).
 """
 
 from __future__ import annotations
@@ -83,30 +83,19 @@ def bouw_etmaal(
     return rijen_totaal
 
 
-#: Referentieschema's voor de drie kleine tabellen hieronder, gebruikt door ``datapackage.py`` (niet
-#: door het schrijfpad zelf: ``bouw_mapping``/``bouw_resultaten``/``bouw_info_metadata`` laten
+#: Referentieschema's voor de twee kleine tabellen hieronder, gebruikt door ``datapackage.py`` (niet
+#: door het schrijfpad zelf: ``bouw_resultaten``/``bouw_info_metadata`` laten
 #: ``schrijf_parquet_atomisch`` het Parquet-type nog steeds uit de pandas-dtypes afleiden, zoals
 #: altijd). Getypeerd naar wat de echte volledige-run-uitvoer daadwerkelijk heeft (geverifieerd op de
-#: uitvoermap van de eerste volledige run, 23-09-2026, met ``pyarrow.parquet.ParquetFile``, NA de
-#: logger_id__str-fix hierboven): ``pandas.to_parquet`` schrijft een tekstkolom als
+#: uitvoermap van de eerste volledige run, 23-09-2026, met ``pyarrow.parquet.ParquetFile``):
+#: ``pandas.to_parquet`` schrijft een tekstkolom als
 #: ``large_string``; hier ``pa.string()`` gebruikt (Frictionless/Table Schema kennen het onderscheid
 #: sowieso niet, beide zijn daar gewoon "string"), zodat dit bestand niet zelf een Arrow-specifieke
 #: keuze hoeft te documenteren die niets met de kolombetekenis te maken heeft.
-MAPPING_SCHEMA = pa.schema(
-    [
-        ("home_id__str", pa.string()),
-        ("logger_id__str", pa.string()),
-        ("serial_no__str", pa.string()),
-        ("heater_id__str", pa.string()),
-    ]
-)
-
 RESULTATEN_SCHEMA = pa.schema(
     [
         ("resultaat_volgnummer__int", pa.int64()),
         ("home_id__str", pa.string()),
-        ("logger_id__str", pa.string()),
-        ("serial_no__str", pa.string()),
         ("model_training_fout__onbekend", pa.float64()),
         ("model_validatie_fout__onbekend", pa.float64()),
         ("model_training_bias__onbekend", pa.float64()),
@@ -137,18 +126,6 @@ INFO_METADATA_SCHEMA = pa.schema(
 )
 
 
-def bouw_mapping(bron) -> pd.DataFrame:
-    """``mapping.csv``: sleuteltabel, blijft apart van de meettabellen (ontwerp §5)."""
-    ruw = bron.lees_mapping()
-    df = ruw.rename(columns=kolommen.MAPPING_KOLOMMEN)
-    df = df[list(kolommen.MAPPING_KOLOMMEN.values())]
-    # Komt hier al als tekst binnen (lees_mapping leest met dtype=str); expliciet nogmaals casten is
-    # een no-op maar bewaakt dat dit ook zo blijft als de leesroute ooit verandert (zie
-    # kolommen.naar_string_zonder_punt0 en de tegenhanger in bouw_resultaten hieronder).
-    df["logger_id__str"] = kolommen.naar_string_zonder_punt0(df["logger_id__str"])
-    return df
-
-
 def bouw_resultaten(bron) -> pd.DataFrame:
     """De resultatentabel (blad ``Sheet1``): 2R2C-parameters, ontwerpvermogen, geïnstalleerd
     radiatorvermogen, woningkenmerken (ontwerp-preprocessing.md §2)."""
@@ -159,12 +136,7 @@ def bouw_resultaten(bron) -> pd.DataFrame:
             ruw[kolom] = ruw[kolom] * 1000.0
     df = ruw.rename(columns=kolommen.RESULTATEN_KOLOMMEN)
     aanwezig = [c for c in kolommen.RESULTATEN_KOLOMMEN.values() if c in df.columns]
-    df = df[aanwezig]
-    if "logger_id__str" in df.columns:
-        # pandas.read_excel infereert deze kolom als getal (int64, of float64 zodra een cel leeg
-        # is); mapping.parquet heeft dezelfde grootheid als string. Zie kolommen.naar_string_zonder_punt0.
-        df["logger_id__str"] = kolommen.naar_string_zonder_punt0(df["logger_id__str"])
-    return df
+    return df[aanwezig]
 
 
 def bouw_info_metadata(bron) -> pd.DataFrame:
