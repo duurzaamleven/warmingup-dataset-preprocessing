@@ -9,7 +9,7 @@ achter de keuzes; wat er eerder was, staat in de git-geschiedenis.
 - De pijplijn verwerkt de versie van 27-10-2026 van de bron, zonder `mapping.csv` en zonder logger-
   en serienummers (uitvoercontractversie `2026-10-28-vierde-opzet`; zie "Bronversie van 27-10-2026"
   hieronder). Getest met synthetische data (`pytest -q`: 90 geslaagd, 3 slaan zichzelf over zonder de
-  ruwe zip in `data/raw/`). Een volledige run op deze versie van de bron is nog niet gedaan.
+  ruwe zip in `data/raw/`). De volledige run op deze versie is gedaan (29-10-2026, zie hieronder).
 - De volledige run en de migratie naar uitvoercontractversie `2026-09-23-derde-opzet` zijn gedaan
   (23-09-2026), op de vorige versie van de bron. Die uitvoer klopt rij voor rij met die bron, maar
   hoort niet bij het huidige contract.
@@ -37,8 +37,15 @@ Wat er in de code veranderd is: `mapping.csv` is geen verplicht lid meer en `map
 `resultaten.parquet` verliest `logger_id__str` en `serial_no__str`; `migreer.py` en
 `draai_migratie.cmd` zijn verwijderd, omdat uitvoer van de vorige bronversie niet zonder de nieuwe
 bron om te zetten is. `draai_volledig.cmd` leest de zip nu uit de omgevingsvariabele `RAW`
-(standaard `data
-aw`). Een sha256 van deze versie is nog niet vastgelegd.
+(standaard `data\raw`).
+
+**De volledige run (29-10-2026).** Na de download van de zip (sha256
+`cb33481174c70ad22a1116d4d6f54921e0c4133ca748d64931b3fee1a2a85ffc`, vastgelegd in `datapackage.py` en
+GEBRUIKSVOORWAARDEN.md) eerst een droogloop, daarna de volledige run met `--raw-dir` naar een map op de
+netwerkschijf: gestart om 01:10, klaar om 03:38 (8.891 s), zonder fouten. 220 woningen in
+`boiler_temp`, 223 in `thermostat_temp`; `resultaten.parquet` heeft 21 kolommen, zonder
+`logger_id__str` en `serial_no__str`; `mapping.parquet` is er niet. `docs/data-quality.md` is door deze
+run opnieuw geschreven.
 
 ## De volledige run en de migratie (23-09-2026)
 

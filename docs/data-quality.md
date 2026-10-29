@@ -2,7 +2,7 @@
 
 Dit bestand wordt door de pijplijn zelf geschreven (`warmingup_preprocessing.kwaliteitsrapport`), niet met de hand bijgehouden. Het telt per plausibiliteitsvlag hoe vaak hij True is (`sentinels.py`); geen enkele gevlagde rij is verwijderd, zie ontwerp-preprocessing.md §6.
 
-Uitvoercontractversie: `2026-09-23-derde-opzet`.
+Uitvoercontractversie: `2026-10-28-vierde-opzet`.
 
 ## `boiler_temp` (minuutdata aanvoer/retour/debiet)
 

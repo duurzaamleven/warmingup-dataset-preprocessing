@@ -62,12 +62,11 @@ from .manifest import UITVOER_CONTRACT_VERSIE
 DATAPACKAGE_BESTANDSNAAM = "datapackage.json"
 
 #: Bron van het archief: de versie van 27-10-2026, zonder mapping.csv en zonder logger- en
-#: serienummers (zie GEBRUIKSVOORWAARDEN.md). De omvang is op afstand vastgesteld, zonder download;
-#: een sha256 van deze versie is nog niet vastgelegd, en een veld zonder waarde laten we weg in
-#: plaats van het te raden (CLAUDE.md-regel 5).
+#: serienummers (zie GEBRUIKSVOORWAARDEN.md). Omvang en sha256 zijn vastgesteld op de download van
+#: 29-10-2026.
 BRON_DOWNLOAD_URL = "https://data.inversable.cloud/how-low-can-you-go/data-en-resultaten.zip"
 BRON_VERSIE = "2026-10-27"
-BRON_SHA256: str | None = None
+BRON_SHA256: str | None = "cb33481174c70ad22a1116d4d6f54921e0c4133ca748d64931b3fee1a2a85ffc"
 BRON_OMVANG__B = 1_798_660_453
 KITE_PAGINA_URL = "https://kennisdelen.rvo.nl/"  # community "Kennis- en Dataplatform Individuele Technieken", projectpagina How-Low-Can-You-Go
 

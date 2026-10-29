@@ -19,7 +19,8 @@
       "title": "data-en-resultaten.zip (ruwe brondata, Deltares), versie van 2026-10-27",
       "path": "https://data.inversable.cloud/how-low-can-you-go/data-en-resultaten.zip",
       "version": "2026-10-27",
-      "bytes": 1798660453
+      "bytes": 1798660453,
+      "sha256": "cb33481174c70ad22a1116d4d6f54921e0c4133ca748d64931b3fee1a2a85ffc"
     }
   ],
   "contributors": [

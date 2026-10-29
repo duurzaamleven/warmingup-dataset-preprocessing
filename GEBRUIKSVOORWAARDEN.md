@@ -47,7 +47,8 @@ community *Kennis- en Dataplatform Individuele Technieken* op <https://kennisdel
 
 - <https://data.inversable.cloud/how-low-can-you-go/data-en-resultaten.zip>
   (versie van 27-10-2026, zonder `mapping.csv` en zonder logger- en serienummers; 1.798.660.453
-  bytes, 11,5 GiB uitgepakt; een sha256 van deze versie is hier nog niet vastgelegd)
+  bytes, 11,5 GiB uitgepakt; sha256
+  `cb33481174c70ad22a1116d4d6f54921e0c4133ca748d64931b3fee1a2a85ffc`)
 
 Zet het archief ongewijzigd in `data/raw/`. **Pak het niet uit**: de pijplijn leest streamend uit de
 zip, en één CSV is uitgepakt al 9,8 GB.
